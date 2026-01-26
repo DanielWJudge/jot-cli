@@ -8,12 +8,23 @@ app = typer.Typer(
 )
 
 
-@app.command()
-def help():
-    """Show help message."""
-    typer.echo("jot - A terminal-based task execution tool")
-    typer.echo("Run 'jot --help' for available commands")
+@app.callback(invoke_without_command=True)
+def callback(ctx: typer.Context) -> None:
+    """
+    Jot - A terminal-based task execution tool.
+
+    Run 'jot --help' to see available commands.
+    """
+    # Show help if no command provided
+    if ctx.invoked_subcommand is None:
+        typer.echo(ctx.get_help())
+        raise typer.Exit(0)
+
+
+def main() -> None:
+    """Entry point for the CLI application."""
+    app()
 
 
 if __name__ == "__main__":
-    app()
+    main()
