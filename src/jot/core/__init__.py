@@ -6,4 +6,22 @@ Core MUST NOT import from commands/, monitor/, ipc/, or config/ packages
 to maintain architectural boundaries and testability.
 """
 
-# Package is empty initially - will be populated in future stories
+from jot.core.exceptions import (
+    ConfigError,
+    DatabaseError,
+    IPCError,
+    JotError,
+    TaskNotFoundError,
+    TaskStateError,
+    display_error,
+)
+
+__all__ = [
+    "ConfigError",
+    "DatabaseError",
+    "IPCError",
+    "JotError",
+    "TaskNotFoundError",
+    "TaskStateError",
+    "display_error",
+]
