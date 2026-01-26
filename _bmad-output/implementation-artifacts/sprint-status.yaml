@@ -1,0 +1,111 @@
+# generated: 2026-01-25
+# project: jot-cli
+# project_key: jot-cli
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-01-25
+project: jot-cli
+project_key: jot-cli
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # Epic 1: Project Foundation & Development Infrastructure
+  epic-1: in-progress
+  1-1-initialize-project-with-poetry-and-core-dependencies: done
+  1-2-establish-project-directory-structure: done
+  1-3-configure-code-quality-tools: ready-for-dev
+  1-4-implement-xdg-path-resolution: backlog
+  1-5-implement-error-handling-foundation: backlog
+  1-6-set-up-cicd-pipeline: backlog
+  epic-1-retrospective: optional
+
+  # Epic 2: Core Task Lifecycle & CLI Commands
+  epic-2: backlog
+  2-1-implement-sqlite-database-foundation: backlog
+  2-2-implement-task-domain-model: backlog
+  2-3-implement-jot-add-command: backlog
+  2-4-implement-jot-done-command: backlog
+  2-5-implement-jot-cancel-command: backlog
+  2-6-implement-jot-defer-command: backlog
+  2-7-implement-jot-status-command: backlog
+  2-8-implement-deferred-task-management: backlog
+  2-9-implement-cli-help-system: backlog
+  epic-2-retrospective: optional
+
+  # Epic 3: Persistent Monitor Window & Real-Time Updates
+  epic-3: backlog
+  3-1-implement-ipc-protocol-foundation: backlog
+  3-2-implement-ipc-client-cli-side: backlog
+  3-3-implement-ipc-server-monitor-side: backlog
+  3-4-implement-theme-module: backlog
+  3-5-implement-basic-monitor-window: backlog
+  3-6-implement-real-time-monitor-updates: backlog
+  3-7-implement-todays-task-display: backlog
+  3-8-implement-display-mode-switching: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4: Daily Review & Task History
+  epic-4: backlog
+  4-1-implement-jot-today-command: backlog
+  4-2-implement-jot-log-command: backlog
+  4-3-implement-task-history-queries: backlog
+  4-4-implement-jot-stats-command: backlog
+  epic-4-retrospective: optional
+
+  # Epic 5: Engagement, Streaks & Habit Building
+  epic-5: backlog
+  5-1-implement-whats-next-prompt-flow: backlog
+  5-2-implement-streak-tracking-logic: backlog
+  5-3-implement-completion-ceremonies: backlog
+  5-4-implement-milestone-celebrations: backlog
+  5-5-implement-idle-reminders: backlog
+  epic-5-retrospective: optional
+
+  # Epic 6: Onboarding, Help & Distribution
+  epic-6: backlog
+  6-1-implement-first-run-detection-and-tutorial: backlog
+  6-2-implement-jot-doctor-diagnostic-command: backlog
+  6-3-create-pypi-distribution-package: backlog
+  6-4-create-homebrew-formula: backlog
+  6-5-implement-contextual-help-messages: backlog
+  epic-6-retrospective: optional
+
+  # Epic 7: Configuration, Customization & Accessibility
+  epic-7: backlog
+  7-1-implement-configuration-file-system: backlog
+  7-2-implement-jot-config-command: backlog
+  7-3-implement-display-mode-configuration: backlog
+  7-4-implement-celebration-level-configuration: backlog
+  7-5-implement-accessibility-fallbacks: backlog
+  epic-7-retrospective: optional
