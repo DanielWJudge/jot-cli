@@ -208,12 +208,17 @@ class TestDisplayError:
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
         """Test error display handles special characters."""
-        console = Console(file=sys.stderr, force_terminal=True)
+        # Use StringIO to avoid ANSI escape codes in test output
+        from io import StringIO
+
+        stderr_buffer = StringIO()
+        console = Console(file=stderr_buffer, force_terminal=False)
         special_message = "Error: Task 'test-task-123' not found!"
         display_error(TaskNotFoundError(special_message), console)
 
-        captured = capsys.readouterr()
-        assert special_message in captured.err
+        output = stderr_buffer.getvalue()
+        # Check that the special characters are preserved in the output
+        assert special_message in output
 
 
 class TestSystemExitPattern:
