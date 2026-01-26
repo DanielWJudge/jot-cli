@@ -75,6 +75,36 @@ def _ensure_directory(path: Path, mode: int = 0o700) -> Path:
     return path
 
 
+def _get_unix_runtime_base() -> Path:
+    """Select a runtime base directory for Unix-like systems.
+
+    Preference order:
+      1) XDG_RUNTIME_DIR (if set)
+      2) /run/user/<uid> (if present)
+      3) TMPDIR (if set)
+      4) ~/.local/run
+    """
+    runtime_base = _get_env_path("XDG_RUNTIME_DIR")
+    if runtime_base is not None:
+        return runtime_base
+
+    if _is_wsl():
+        wsl_tmpdir = _get_env_path("TMPDIR")
+        if wsl_tmpdir is not None:
+            return wsl_tmpdir
+
+    if hasattr(os, "getuid"):
+        run_user = Path("/run/user") / str(os.getuid())
+        if run_user.is_dir():
+            return run_user
+
+    tmpdir = _get_env_path("TMPDIR")
+    if tmpdir is not None:
+        return tmpdir
+
+    return Path.home() / ".local" / "run"
+
+
 def get_config_dir() -> Path:
     """Get the jot configuration directory.
 
@@ -141,7 +171,7 @@ def get_runtime_dir() -> Path:
     """Get the jot runtime directory.
 
     Returns XDG_RUNTIME_DIR/jot on Linux/macOS with fallback.
-    Falls back to XDG_DATA_HOME/jot if XDG_RUNTIME_DIR not set.
+    Falls back to /run/user/<uid>, TMPDIR, or ~/.local/run on Unix.
     On Windows, returns %TEMP%/jot.
     Creates directory with 0700 permissions if it doesn't exist.
 
@@ -159,8 +189,8 @@ def get_runtime_dir() -> Path:
             raise OSError("TEMP environment variable not set")
         runtime_dir = Path(temp) / "jot"
     else:
-        # Linux/macOS: Try XDG_RUNTIME_DIR first, fallback to data dir
-        runtime_base = _get_env_path("XDG_RUNTIME_DIR")
-        runtime_dir = runtime_base / "jot" if runtime_base else get_data_dir()
+        # Linux/macOS: XDG_RUNTIME_DIR with /run/user and TMPDIR fallback
+        runtime_base = _get_unix_runtime_base()
+        runtime_dir = runtime_base / "jot"
 
     return _ensure_directory(runtime_dir)

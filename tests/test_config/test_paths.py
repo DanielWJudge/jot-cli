@@ -159,6 +159,32 @@ class TestEnsureDirectory:
 
         assert result.exists()
 
+    def test_directory_permission_denied_on_mkdir(self, monkeypatch, tmp_path):
+        """Test _ensure_directory surfaces permission denied on mkdir."""
+        target_dir = tmp_path / "protected"
+
+        def raise_permission_error(*_args, **_kwargs):  # type: ignore[no-untyped-def]
+            raise PermissionError("no write permission")
+
+        monkeypatch.setattr(Path, "mkdir", raise_permission_error)
+
+        with pytest.raises(PermissionError, match="no write permission"):
+            _ensure_directory(target_dir)
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="Unix permissions test")
+    def test_directory_permission_denied_on_chmod(self, monkeypatch, tmp_path):
+        """Test _ensure_directory surfaces permission denied on chmod."""
+        target_dir = tmp_path / "restricted"
+        target_dir.mkdir()
+
+        def raise_permission_error(*_args, **_kwargs):  # type: ignore[no-untyped-def]
+            raise PermissionError("chmod denied")
+
+        monkeypatch.setattr(Path, "chmod", raise_permission_error)
+
+        with pytest.raises(PermissionError, match="chmod denied"):
+            _ensure_directory(target_dir)
+
 
 class TestConfigDir:
     """Test get_config_dir() function."""
@@ -375,15 +401,14 @@ class TestRuntimeDir:
         assert runtime_dir == runtime_base / "jot"
         assert runtime_dir.exists()
 
-    def test_runtime_dir_fallback_to_data_dir(self, clean_env, mock_home, monkeypatch):
-        """Test runtime dir fallback when XDG_RUNTIME_DIR not set."""
+    def test_runtime_dir_fallback_to_local_run(self, clean_env, mock_home, monkeypatch):
+        """Test runtime dir fallback to ~/.local/run when not set."""
+        monkeypatch.delenv("TMPDIR", raising=False)
         monkeypatch.setattr("sys.platform", "linux")
 
         runtime_dir = get_runtime_dir()
-        data_dir = get_data_dir()
 
-        # Should fallback to data directory
-        assert runtime_dir == data_dir
+        assert runtime_dir == mock_home / ".local" / "run" / "jot"
         assert runtime_dir.exists()
 
     def test_xdg_runtime_dir_with_tilde(self, clean_env, monkeypatch):
@@ -395,6 +420,34 @@ class TestRuntimeDir:
 
         expected = Path.home() / "my_runtime" / "jot"
         assert runtime_dir == expected
+        assert runtime_dir.exists()
+
+    def test_runtime_dir_fallback_to_tmpdir(self, clean_env, tmp_path, monkeypatch):
+        """Test runtime dir fallback to TMPDIR when set."""
+        tmpdir = tmp_path / "runtime_tmp"
+        tmpdir.mkdir()
+        monkeypatch.setenv("TMPDIR", str(tmpdir))
+        monkeypatch.setattr("sys.platform", "linux")
+
+        runtime_dir = get_runtime_dir()
+
+        assert runtime_dir == tmpdir / "jot"
+        assert runtime_dir.exists()
+
+    def test_runtime_dir_wsl_prefers_tmpdir(self, clean_env, tmp_path, monkeypatch):
+        """Test runtime dir uses TMPDIR on WSL."""
+        tmpdir = tmp_path / "wsl_tmp"
+        tmpdir.mkdir()
+        monkeypatch.setenv("TMPDIR", str(tmpdir))
+        monkeypatch.setattr("sys.platform", "linux")
+
+        mock_uname = MagicMock()
+        mock_uname.release = "5.10.16.3-microsoft-standard-WSL2"
+        monkeypatch.setattr("platform.uname", lambda: mock_uname)
+
+        runtime_dir = get_runtime_dir()
+
+        assert runtime_dir == tmpdir / "jot"
         assert runtime_dir.exists()
 
     def test_windows_runtime_dir(self, clean_env, tmp_path, monkeypatch):
