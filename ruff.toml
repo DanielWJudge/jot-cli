@@ -20,4 +20,4 @@ ignore = [
 
 [lint.per-file-ignores]
 "__init__.py" = ["F401"]  # unused imports in __init__.py
-"tests/**/*.py" = ["ARG", "S101"]  # Allow assert and unused args in tests
+"tests/**/*.py" = ["ARG"]  # Allow unused args in tests

@@ -92,3 +92,7 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = "jot.cli"
 disable_error_code = ["untyped-decorator"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false

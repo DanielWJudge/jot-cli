@@ -430,6 +430,35 @@ class TestPreCommitToolExecution:
             result.returncode == 0
         ), f"Pre-commit config must be valid. Output: {result.stdout}\nErrors: {result.stderr}"
 
+    def test_pre_commit_runs_on_all_files(self, project_root: Path):
+        """GIVEN: Pre-commit hooks are configured
+        WHEN: Running 'pre-commit run --all-files'
+        THEN: All hooks pass on all files"""
+        result = subprocess.run(
+            ["poetry", "run", "pre-commit", "run", "--all-files"],
+            cwd=project_root,
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+
+        assert (
+            result.returncode == 0
+        ), f"Pre-commit hooks must pass on all files. Output: {result.stdout}\nErrors: {result.stderr}"
+
+    def test_pre_commit_hooks_installed_in_git(self, project_root: Path):
+        """GIVEN: Pre-commit install was run
+        WHEN: Checking .git/hooks directory
+        THEN: Pre-commit hook file exists"""
+        git_hooks_dir = project_root / ".git" / "hooks"
+        if not git_hooks_dir.exists():
+            pytest.skip("Not a git repository or .git/hooks directory doesn't exist")
+
+        pre_commit_hook = git_hooks_dir / "pre-commit"
+        assert (
+            pre_commit_hook.exists()
+        ), "Git pre-commit hook must be installed (run 'poetry run pre-commit install')"
+
 
 class TestConfigurationConsistency:
     """Verify configuration files are consistent with each other."""
