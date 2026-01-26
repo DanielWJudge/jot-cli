@@ -1,5 +1,7 @@
 # jot-cli
 
+![CI](https://github.com/djudge/jot-cli/workflows/CI/badge.svg)
+
 A terminal-based task execution tool for focused work. Jot helps you maintain single-task focus with a persistent monitor window, behavioral reinforcement, and accomplishment tracking.
 
 ## Features
@@ -88,8 +90,39 @@ jot-cli/
 │       ├── __init__.py       # Package initialization
 │       └── cli.py            # CLI entry point
 ├── tests/                    # Test suite
+├── .github/
+│   └── workflows/
+│       ├── ci.yml           # Continuous Integration
+│       └── release.yml      # Release Automation
 ├── pyproject.toml           # Poetry configuration
 └── README.md                # This file
+```
+
+### CI/CD Pipeline
+
+The project uses GitHub Actions for continuous integration and automated releases:
+
+**CI Workflow (runs on every push/PR):**
+- ✅ Code linting with Ruff
+- ✅ Code formatting check with Black
+- ✅ Type checking with Mypy
+- ✅ Tests with coverage (80% minimum)
+
+**Release Workflow (triggered by version tags):**
+- 📦 Build package with Poetry
+- 🚀 Publish to PyPI
+- 📝 Create GitHub release with changelog
+
+To create a release:
+```bash
+# Update version
+poetry version patch  # or minor, major
+
+# Commit and tag
+git add pyproject.toml
+git commit -m "chore: bump version to $(poetry version -s)"
+git tag "v$(poetry version -s)"
+git push origin main --tags
 ```
 
 ## Architecture

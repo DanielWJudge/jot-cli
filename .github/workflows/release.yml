@@ -1,0 +1,71 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --with dev
+
+      - name: Build package
+        run: poetry build
+
+      - name: Verify build artifacts
+        run: |
+          if [ ! -d dist/ ]; then
+            echo "ERROR: dist/ directory does not exist!"
+            exit 1
+          fi
+          wheel_count=$(find dist/ -name "*.whl" | wc -l)
+          tarball_count=$(find dist/ -name "*.tar.gz" | wc -l)
+          if [ "$wheel_count" -eq 0 ] || [ "$tarball_count" -eq 0 ]; then
+            echo "ERROR: Build artifacts not found!"
+            echo "Wheel files found: $wheel_count"
+            echo "Tarball files found: $tarball_count"
+            ls -la dist/ || echo "dist/ directory listing failed"
+            exit 1
+          fi
+          echo "✓ Build artifacts verified: $wheel_count wheel(s), $tarball_count tarball(s)"
+
+      - name: Publish to PyPI
+        id: publish-pypi
+        env:
+          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_API_TOKEN }}
+        run: poetry publish
+
+      - name: Extract version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        if: success() && steps.publish-pypi.outcome == 'success'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
+          generate_release_notes: true
+          name: Release ${{ steps.get_version.outputs.VERSION }}
