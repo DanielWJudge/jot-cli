@@ -300,9 +300,10 @@ class TestDependencyRules:
         core_init = JOT_PACKAGE_DIR / "core" / "__init__.py"
         content = core_init.read_text(encoding="utf-8")
 
-        # Check that docstring mentions the dependency rule
+        # Check that docstring mentions the dependency rule (case-insensitive)
+        content_lower = content.lower()
         assert (
-            "must NOT import" in content or "cannot import" in content or "does not import" in content
+            "must not import" in content_lower or "cannot import" in content_lower or "does not import" in content_lower
         ), "core/__init__.py docstring should document dependency restrictions"
 
 
@@ -393,3 +394,92 @@ class TestPackageDocumentation:
         content = config_init.read_text(encoding="utf-8")
 
         assert '"""' in content or "'''" in content, "config/__init__.py should have a docstring"
+
+
+class TestArchitecturalDocumentation:
+    """Verify architectural dependency rules are correctly documented in docstrings.
+
+    These tests validate that each package's __init__.py correctly documents
+    what it CAN and CANNOT import, per the architecture specification.
+    """
+
+    def test_db_package_documents_no_core_imports(self):
+        """GIVEN: Architecture specifies db/ uses only stdlib
+        WHEN: Checking db/__init__.py docstring
+        THEN: Docstring states db MUST NOT import from core/"""
+        db_init = JOT_PACKAGE_DIR / "db" / "__init__.py"
+        content = db_init.read_text(encoding="utf-8")
+
+        # db/ should document that it uses ONLY stdlib, no core imports
+        assert (
+            "MUST use only stdlib" in content or "only stdlib" in content
+        ), "db/__init__.py must document stdlib-only constraint"
+        assert (
+            "MUST NOT import from core" in content or "not import from core" in content.lower()
+        ), "db/__init__.py must explicitly forbid core imports"
+
+    def test_config_package_documents_no_jot_imports(self):
+        """GIVEN: Architecture specifies config/ uses only stdlib
+        WHEN: Checking config/__init__.py docstring
+        THEN: Docstring states config MUST NOT import from ANY jot module"""
+        config_init = JOT_PACKAGE_DIR / "config" / "__init__.py"
+        content = config_init.read_text(encoding="utf-8")
+
+        # config/ is lowest layer - no imports from any other jot module
+        assert (
+            "MUST use only stdlib" in content or "only stdlib" in content
+        ), "config/__init__.py must document stdlib-only constraint"
+        assert (
+            "MUST NOT import from any other jot" in content or "not import from any other jot" in content.lower()
+        ), "config/__init__.py must forbid all jot module imports"
+
+    def test_ipc_package_documents_limited_imports(self):
+        """GIVEN: Architecture specifies ipc/ can only import core.exceptions, config.paths
+        WHEN: Checking ipc/__init__.py docstring
+        THEN: Docstring specifies ONLY core.exceptions and config.paths"""
+        ipc_init = JOT_PACKAGE_DIR / "ipc" / "__init__.py"
+        content = ipc_init.read_text(encoding="utf-8")
+
+        # ipc/ should document it can ONLY import specific modules
+        assert (
+            "ONLY import from core.exceptions" in content or "only import from core.exceptions" in content.lower()
+        ), "ipc/__init__.py must specify limited import scope"
+        assert (
+            "config.paths" in content
+        ), "ipc/__init__.py must mention config.paths as allowed import"
+
+    def test_core_package_documents_db_interface_imports(self):
+        """GIVEN: Architecture allows core/ to import db/ interfaces only
+        WHEN: Checking core/__init__.py docstring
+        THEN: Docstring mentions core can import from db/ (interfaces only)"""
+        core_init = JOT_PACKAGE_DIR / "core" / "__init__.py"
+        content = core_init.read_text(encoding="utf-8")
+
+        # core/ can import db interfaces
+        assert (
+            "import from db" in content.lower() and "interfaces only" in content.lower()
+        ), "core/__init__.py must document allowed db interface imports"
+
+    def test_commands_package_documents_ipc_client(self):
+        """GIVEN: Architecture specifies commands/ uses ipc.client
+        WHEN: Checking commands/__init__.py docstring
+        THEN: Docstring mentions ipc.client specifically"""
+        commands_init = JOT_PACKAGE_DIR / "commands" / "__init__.py"
+        content = commands_init.read_text(encoding="utf-8")
+
+        # commands/ should specify ipc.client (not just ipc/)
+        assert (
+            "ipc.client" in content
+        ), "commands/__init__.py must specify ipc.client (not generic ipc/)"
+
+    def test_monitor_package_documents_ipc_server(self):
+        """GIVEN: Architecture specifies monitor/ uses ipc.server
+        WHEN: Checking monitor/__init__.py docstring
+        THEN: Docstring mentions ipc.server specifically"""
+        monitor_init = JOT_PACKAGE_DIR / "monitor" / "__init__.py"
+        content = monitor_init.read_text(encoding="utf-8")
+
+        # monitor/ should specify ipc.server (not just ipc/)
+        assert (
+            "ipc.server" in content
+        ), "monitor/__init__.py must specify ipc.server (not generic ipc/)"

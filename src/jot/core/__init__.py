@@ -1,7 +1,8 @@
 """Business logic and domain models for jot.
 
 This package contains pure business logic and domain models.
-Core must NOT import from commands/, monitor/, db/, ipc/, or config/ packages
+Core can import from db/ (interfaces only) for repository patterns.
+Core MUST NOT import from commands/, monitor/, ipc/, or config/ packages
 to maintain architectural boundaries and testability.
 """
 
