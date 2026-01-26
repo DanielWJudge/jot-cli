@@ -180,16 +180,13 @@ class TestDisplayError:
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
         """Test display_error uses default stderr console if None provided."""
-        # Use a StringIO-based console to capture output reliably
-        from io import StringIO
+        # Pass None explicitly to test default console creation
+        display_error(TaskNotFoundError("No task found"), console=None)
 
-        stderr_buffer = StringIO()
-        test_console = Console(file=stderr_buffer, force_terminal=False)
-        display_error(TaskNotFoundError("No task found"), console=test_console)
-
-        output = stderr_buffer.getvalue()
-        assert "No task found" in output
-        assert "Error" in output
+        captured = capsys.readouterr()
+        assert "No task found" in captured.err
+        assert "Error" in captured.err or "❌" in captured.err
+        assert captured.out == ""  # Nothing to stdout
 
     def test_displays_error_with_long_message(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test error display handles long error messages."""

@@ -1,11 +1,12 @@
 """Exception hierarchy for jot application errors."""
 
+from __future__ import annotations
+
 import sys
+from typing import TYPE_CHECKING
 
-from rich.console import Console
-
-# Create a console instance for error output (always stderr)
-_error_console = Console(file=sys.stderr, force_terminal=True)
+if TYPE_CHECKING:
+    from rich.console import Console
 
 
 class JotError(Exception):
@@ -122,12 +123,16 @@ def display_error(
     ensuring all error output goes to stderr, never stdout.
 
     Args:
-        console: Rich Console instance (defaults to stderr console)
         error: JotError instance to display
+        console: Rich Console instance (defaults to stderr console)
         suggestion: Optional recovery suggestion message
     """
+    # Import Rich only when needed (keeps exception classes stdlib-only)
+    from rich.console import Console
+
     if console is None:
-        console = _error_console
+        # Create default stderr console on demand
+        console = Console(file=sys.stderr, force_terminal=True)
 
     # Format error message with Rich markup
     console.print(f"[red]❌ Error:[/] {error.message}")
