@@ -44,7 +44,7 @@ development_status:
   epic-1: in-progress
   1-1-initialize-project-with-poetry-and-core-dependencies: done
   1-2-establish-project-directory-structure: done
-  1-3-configure-code-quality-tools: in-progress
+  1-3-configure-code-quality-tools: review
   1-4-implement-xdg-path-resolution: backlog
   1-5-implement-error-handling-foundation: backlog
   1-6-set-up-cicd-pipeline: backlog

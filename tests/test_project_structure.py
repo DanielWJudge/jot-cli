@@ -8,10 +8,7 @@ Priority: P0 (Critical - Run on every commit)
 Test Level: Unit/Integration (project structure and import validation)
 """
 
-import sys
 from pathlib import Path
-
-import pytest
 
 # Test data
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -180,11 +177,11 @@ class TestPackageImports:
         WHEN: Importing all packages in sequence
         THEN: All imports succeed without circular dependency errors"""
         import jot.commands  # noqa: F401
-        import jot.monitor  # noqa: F401
+        import jot.config  # noqa: F401
         import jot.core  # noqa: F401
         import jot.db  # noqa: F401
         import jot.ipc  # noqa: F401
-        import jot.config  # noqa: F401
+        import jot.monitor  # noqa: F401
 
         # If we get here, no circular import errors occurred
         assert True
@@ -303,7 +300,9 @@ class TestDependencyRules:
         # Check that docstring mentions the dependency rule (case-insensitive)
         content_lower = content.lower()
         assert (
-            "must not import" in content_lower or "cannot import" in content_lower or "does not import" in content_lower
+            "must not import" in content_lower
+            or "cannot import" in content_lower
+            or "does not import" in content_lower
         ), "core/__init__.py docstring should document dependency restrictions"
 
 
@@ -323,6 +322,7 @@ class TestCLIStillWorks:
         WHEN: Checking app type
         THEN: App is a Typer instance"""
         import typer
+
         from jot.cli import app
 
         assert isinstance(app, typer.Typer), "app must be a Typer instance"
@@ -430,7 +430,8 @@ class TestArchitecturalDocumentation:
             "MUST use only stdlib" in content or "only stdlib" in content
         ), "config/__init__.py must document stdlib-only constraint"
         assert (
-            "MUST NOT import from any other jot" in content or "not import from any other jot" in content.lower()
+            "MUST NOT import from any other jot" in content
+            or "not import from any other jot" in content.lower()
         ), "config/__init__.py must forbid all jot module imports"
 
     def test_ipc_package_documents_limited_imports(self):
@@ -442,7 +443,8 @@ class TestArchitecturalDocumentation:
 
         # ipc/ should document it can ONLY import specific modules
         assert (
-            "ONLY import from core.exceptions" in content or "only import from core.exceptions" in content.lower()
+            "ONLY import from core.exceptions" in content
+            or "only import from core.exceptions" in content.lower()
         ), "ipc/__init__.py must specify limited import scope"
         assert (
             "config.paths" in content

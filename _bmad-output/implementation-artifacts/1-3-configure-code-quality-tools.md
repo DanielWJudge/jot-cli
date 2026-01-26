@@ -1,6 +1,6 @@
 # Story 1.3: Configure Code Quality Tools
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -27,20 +27,20 @@ So that **code style and type safety are enforced consistently**.
 
 ## Tasks / Subtasks
 
-- [ ] Add `pre-commit` to dev dependencies: `poetry add --group dev pre-commit` (CRITICAL)
-- [ ] Migrate Ruff configuration (AC: #1, #3)
-  - [ ] Create `ruff.toml` with complete configuration
-  - [ ] Remove `[tool.ruff]` section from `pyproject.toml` to avoid conflicts
-  - [ ] Verify `poetry run ruff check .` passes
-- [ ] Refine Black and Mypy configurations (AC: #2)
-  - [ ] Verify Black line-length matches Ruff (100)
-  - [ ] Ensure Mypy strict mode is fully enabled in `pyproject.toml`
-  - [ ] Verify `poetry run black --check .` and `poetry run mypy src/` pass
-- [ ] Set up pre-commit hooks (AC: #4)
-  - [ ] Create `.pre-commit-config.yaml` with optimized hook order (Ruff -> Black -> Mypy)
-  - [ ] Include `types-PyYAML` for Mypy
-  - [ ] Install hooks: `poetry run pre-commit install`
-  - [ ] Verify hooks run on commit or via `poetry run pre-commit run --all-files`
+- [x] Add `pre-commit` to dev dependencies: `poetry add --group dev pre-commit` (CRITICAL)
+- [x] Migrate Ruff configuration (AC: #1, #3)
+  - [x] Create `ruff.toml` with complete configuration
+  - [x] Remove `[tool.ruff]` section from `pyproject.toml` to avoid conflicts
+  - [x] Verify `poetry run ruff check .` passes
+- [x] Refine Black and Mypy configurations (AC: #2)
+  - [x] Verify Black line-length matches Ruff (100)
+  - [x] Ensure Mypy strict mode is fully enabled in `pyproject.toml`
+  - [x] Verify `poetry run black --check .` and `poetry run mypy src/` pass
+- [x] Set up pre-commit hooks (AC: #4)
+  - [x] Create `.pre-commit-config.yaml` with optimized hook order (Ruff -> Black -> Mypy)
+  - [x] Include `types-PyYAML` for Mypy
+  - [x] Install hooks: `poetry run pre-commit install`
+  - [x] Verify hooks run on commit or via `poetry run pre-commit run --all-files`
 - [ ] (Optional) Add `commitlint` hook for conventional commits to match project history
 
 ## Dev Notes
@@ -134,20 +134,20 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
         args: ['--maxkb=1000']
-  
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.14.14
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
       - id: ruff-format
-  
+
   - repo: https://github.com/psf/black
     rev: 26.1.0
     hooks:
       - id: black
         language_version: python3.13
-  
+
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.19.1
     hooks:
@@ -254,7 +254,22 @@ gemini-3-flash-preview (BMad Context Engine)
 - ✅ Added `types-PyYAML` for Mypy
 - ✅ Optimized pre-commit hook order (Ruff -> Black -> Mypy)
 - ✅ Explicitly synced `line-length` across tools
+- ✅ Created `ruff.toml` with complete linting configuration
+- ✅ Migrated Ruff configuration from `pyproject.toml` to `ruff.toml`
+- ✅ Verified Black and Mypy configurations match requirements
+- ✅ Created `.pre-commit-config.yaml` with hooks for ruff, black, and mypy
+- ✅ Installed pre-commit hooks and verified all tools pass
+- ✅ Fixed linting issues in test files (removed unused imports, fixed import sorting)
+- ✅ Configured mypy to ignore untyped-decorator for typer decorators
+- ✅ Removed ruff-format hook to avoid conflict with Black formatter
 
 ### File List
 
-- `_bmad-output/implementation-artifacts/1-3-configure-code-quality-tools.md`
+- `ruff.toml` (created)
+- `.pre-commit-config.yaml` (created)
+- `pyproject.toml` (modified - removed [tool.ruff] section, added mypy override for jot.cli)
+- `tests/conftest.py` (modified - removed unused sys import)
+- `tests/test_project_structure.py` (modified - removed unused imports, fixed import sorting)
+- `src/jot/cli.py` (modified - formatting)
+- `_bmad-output/implementation-artifacts/1-3-configure-code-quality-tools.md` (updated)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (updated)
