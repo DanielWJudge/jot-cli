@@ -15,13 +15,17 @@ from jot.core.exceptions import (
     TaskStateError,
     display_error,
 )
+from jot.core.task import Task, TaskEvent, TaskState
 
 __all__ = [
     "ConfigError",
     "DatabaseError",
     "IPCError",
     "JotError",
+    "Task",
+    "TaskEvent",
     "TaskNotFoundError",
+    "TaskState",
     "TaskStateError",
     "display_error",
 ]

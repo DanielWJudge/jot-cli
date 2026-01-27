@@ -15,7 +15,6 @@ def db_path(tmp_path: Path) -> Path:
 def mock_data_dir(monkeypatch, tmp_path: Path):
     """Mock get_data_dir to return temporary directory."""
     monkeypatch.setattr("jot.db.connection.get_data_dir", lambda: tmp_path)
-    monkeypatch.setattr("jot.db.migrations.get_data_dir", lambda: tmp_path)
     return tmp_path
 
 
@@ -35,6 +34,39 @@ def clean_db(mock_data_dir, db_path: Path):
     conn.close()
 
     # Cleanup: remove database file
+    if db_path.exists():
+        db_path.unlink()
+        # Also remove WAL and SHM files if they exist
+        wal_path = db_path.with_suffix(".db-wal")
+        shm_path = db_path.with_suffix(".db-shm")
+        if wal_path.exists():
+            wal_path.unlink()
+        if shm_path.exists():
+            shm_path.unlink()
+
+
+@pytest.fixture
+def temp_db(mock_data_dir, db_path: Path):
+    """Provide a temporary database with schema for repository tests.
+
+    This fixture sets up a clean database with the schema migrated,
+    allowing repository tests to use get_connection() directly.
+    """
+    from jot.db.connection import get_connection
+    from jot.db.migrations import migrate_schema
+
+    # Remove existing database if present
+    if db_path.exists():
+        db_path.unlink()
+
+    # Initialize schema
+    conn = get_connection()
+    migrate_schema(conn)
+    conn.close()
+
+    yield None
+
+    # Cleanup: remove database files
     if db_path.exists():
         db_path.unlink()
         # Also remove WAL and SHM files if they exist

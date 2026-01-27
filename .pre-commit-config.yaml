@@ -24,6 +24,6 @@ repos:
     rev: v1.19.1
     hooks:
       - id: mypy
-        additional_dependencies: [types-PyYAML]
+        additional_dependencies: [types-PyYAML, pydantic]
         args: [--ignore-missing-imports]
         files: ^src/
