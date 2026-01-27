@@ -119,9 +119,9 @@ class TestMigrationsEdgeCases:
 
         conn = get_connection()
 
-        # Test version 0 (no schema)
+        # get_connection auto-migrates to current schema
         version = get_schema_version(conn)
-        assert version == 0
+        assert version == 1
 
         # Manually set version to a high number
         cursor = conn.cursor()

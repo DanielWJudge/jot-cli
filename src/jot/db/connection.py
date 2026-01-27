@@ -47,6 +47,11 @@ def get_connection() -> sqlite3.Connection:
         if os.name != "nt":  # Not Windows
             os.chmod(db_path, 0o600)
 
+        # Ensure schema is migrated/initialized before use
+        from jot.db.migrations import migrate_schema
+
+        migrate_schema(conn)
+
         return conn
 
     except OSError as e:

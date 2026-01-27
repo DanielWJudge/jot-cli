@@ -17,9 +17,9 @@ class TestMigrationSystem:
 
         conn = get_connection()
 
-        # Initially should be version 0
+        # get_connection auto-migrates to current schema
         version = get_schema_version(conn)
-        assert version == 0
+        assert version == 1
 
         # Migrate to version 1
         migrate_schema(conn)
@@ -45,9 +45,9 @@ class TestMigrationSystem:
 
         conn = get_connection()
 
-        # Check version before migration
+        # get_connection auto-migrates to current schema
         version = get_schema_version(conn)
-        assert version == 0
+        assert version == 1
 
         # Migrate
         migrate_schema(conn)
@@ -99,7 +99,7 @@ class TestMigrationSystem:
 
         # Call without connection
         version = get_schema_version()
-        assert version == 0
+        assert version == 1
 
         # Migrate
         migrate_schema()

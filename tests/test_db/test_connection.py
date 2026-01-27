@@ -67,7 +67,24 @@ class TestDatabaseConnection:
         cursor.execute("PRAGMA user_version")
         version = cursor.fetchone()[0]
 
-        assert version >= 0  # Should be set to initial version
+        assert version == 1  # Should be set to current schema version
+        conn.close()
+
+    def test_creates_initial_schema(self, tmp_path, monkeypatch):
+        """Test tasks and task_events tables are created."""
+        monkeypatch.setattr("jot.db.connection.get_data_dir", lambda: tmp_path)
+
+        from jot.db.connection import get_connection
+
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('tasks', 'task_events')"
+        )
+        table_names = {row[0] for row in cursor.fetchall()}
+
+        assert table_names == {"tasks", "task_events"}
         conn.close()
 
     def test_handles_directory_creation(self, tmp_path, monkeypatch):
