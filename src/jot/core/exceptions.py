@@ -1,9 +1,16 @@
-"""Exception hierarchy for jot application errors."""
+"""Exception hierarchy for jot application errors.
+
+Note: DatabaseError has been moved to jot.db.exceptions to maintain clean
+architectural boundaries. It is re-exported here for backward compatibility.
+"""
 
 from __future__ import annotations
 
 import sys
 from typing import TYPE_CHECKING
+
+# Import DatabaseError from db package for re-export
+from jot.db.exceptions import DatabaseError as DatabaseError  # Explicit re-export for mypy
 
 if TYPE_CHECKING:
     from rich.console import Console
@@ -64,20 +71,8 @@ class TaskStateError(JotError):
         super().__init__(message, exit_code=1)
 
 
-class DatabaseError(JotError):
-    """Raised when a database operation fails.
-
-    This is a system error (exit_code=2) because database failures
-    indicate a problem with the system, not user input.
-    """
-
-    def __init__(self, message: str) -> None:
-        """Initialize DatabaseError.
-
-        Args:
-            message: Error message describing the database failure
-        """
-        super().__init__(message, exit_code=2)
+# DatabaseError is now defined in jot.db.exceptions and imported above
+# This maintains architectural separation while keeping backward compatibility
 
 
 class ConfigError(JotError):

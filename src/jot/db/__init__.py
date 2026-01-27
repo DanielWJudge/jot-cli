@@ -5,4 +5,8 @@ The db package MUST use only stdlib (sqlite3) and primitive types.
 It MUST NOT import from core/, commands/, or monitor/ to maintain clean architecture.
 """
 
-# Package is empty initially - will be populated in future stories
+from jot.db.connection import get_connection
+from jot.db.exceptions import DatabaseError
+from jot.db.migrations import get_schema_version, migrate_schema
+
+__all__ = ["get_connection", "get_schema_version", "migrate_schema", "DatabaseError"]
