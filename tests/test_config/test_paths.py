@@ -405,6 +405,16 @@ class TestRuntimeDir:
         """Test runtime dir fallback to ~/.local/run when not set."""
         monkeypatch.delenv("TMPDIR", raising=False)
         monkeypatch.setattr("sys.platform", "linux")
+        # Mock /run/user/<uid> to not exist so fallback is tested
+        # Patch Path.is_dir to return False for /run/user/* paths
+        original_is_dir = Path.is_dir
+
+        def mock_is_dir(self):
+            if str(self).startswith("/run/user/"):
+                return False
+            return original_is_dir(self)
+
+        monkeypatch.setattr("pathlib.Path.is_dir", mock_is_dir)
 
         runtime_dir = get_runtime_dir()
 
@@ -428,6 +438,16 @@ class TestRuntimeDir:
         tmpdir.mkdir()
         monkeypatch.setenv("TMPDIR", str(tmpdir))
         monkeypatch.setattr("sys.platform", "linux")
+        # Mock /run/user/<uid> to not exist so fallback is tested
+        # Patch Path.is_dir to return False for /run/user/* paths
+        original_is_dir = Path.is_dir
+
+        def mock_is_dir(self):
+            if str(self).startswith("/run/user/"):
+                return False
+            return original_is_dir(self)
+
+        monkeypatch.setattr("pathlib.Path.is_dir", mock_is_dir)
 
         runtime_dir = get_runtime_dir()
 
