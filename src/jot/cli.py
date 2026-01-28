@@ -7,6 +7,7 @@ import typer
 from rich.console import Console
 
 from jot.commands.add import add_command
+from jot.commands.done import done_command
 from jot.core.exceptions import JotError, display_error
 
 # Create console instance for error output (always stderr)
@@ -42,8 +43,9 @@ def handle_jot_errors[T](func: Callable[[], T]) -> Callable[[], T]:
     return wrapper
 
 
-# Register add command
+# Register commands
 app.command(name="add")(add_command)
+app.command(name="done")(done_command)
 
 
 @app.callback(invoke_without_command=True)
