@@ -43,8 +43,8 @@ class TaskRepository:
                 """
                 INSERT INTO tasks (
                     id, description, state, created_at, updated_at,
-                    completed_at, deferred_until
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    completed_at, cancelled_at, cancel_reason, deferred_until
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     task.id,
@@ -53,6 +53,8 @@ class TaskRepository:
                     task.created_at.isoformat(),
                     task.updated_at.isoformat(),
                     task.completed_at.isoformat() if task.completed_at else None,
+                    task.cancelled_at.isoformat() if task.cancelled_at else None,
+                    task.cancel_reason,
                     task.deferred_until.isoformat() if task.deferred_until else None,
                 ),
             )
@@ -159,6 +161,8 @@ class TaskRepository:
                     state = ?,
                     updated_at = ?,
                     completed_at = ?,
+                    cancelled_at = ?,
+                    cancel_reason = ?,
                     deferred_until = ?
                 WHERE id = ?
                 """,
@@ -167,6 +171,8 @@ class TaskRepository:
                     task.state.value,
                     task.updated_at.isoformat(),
                     task.completed_at.isoformat() if task.completed_at else None,
+                    task.cancelled_at.isoformat() if task.cancelled_at else None,
+                    task.cancel_reason,
                     task.deferred_until.isoformat() if task.deferred_until else None,
                     task.id,
                 ),
@@ -183,6 +189,75 @@ class TaskRepository:
         finally:
             conn.close()
 
+    def update_task_with_event(self, task: Task, event: TaskEvent) -> None:
+        """Update task and create event atomically in a single transaction.
+
+        This ensures data consistency by committing both operations together.
+        If either operation fails, both are rolled back.
+
+        Args:
+            task: Task model with updated values
+            event: Event to log for this task update
+
+        Raises:
+            TaskNotFoundError: If task doesn't exist
+            DatabaseError: If update or event creation fails
+        """
+        conn = get_connection()
+        try:
+            cursor = conn.cursor()
+
+            # Update task
+            cursor.execute(
+                """
+                UPDATE tasks
+                SET description = ?,
+                    state = ?,
+                    updated_at = ?,
+                    completed_at = ?,
+                    cancelled_at = ?,
+                    cancel_reason = ?,
+                    deferred_until = ?
+                WHERE id = ?
+                """,
+                (
+                    task.description,
+                    task.state.value,
+                    task.updated_at.isoformat(),
+                    task.completed_at.isoformat() if task.completed_at else None,
+                    task.cancelled_at.isoformat() if task.cancelled_at else None,
+                    task.cancel_reason,
+                    task.deferred_until.isoformat() if task.deferred_until else None,
+                    task.id,
+                ),
+            )
+
+            if cursor.rowcount == 0:
+                raise TaskNotFoundError(f"Task not found: {task.id}")
+
+            # Create event in same transaction
+            cursor.execute(
+                """
+                INSERT INTO task_events (task_id, event_type, timestamp, metadata)
+                VALUES (?, ?, ?, ?)
+                """,
+                (
+                    event.task_id,
+                    event.event_type,
+                    event.timestamp.isoformat(),
+                    event.metadata,
+                ),
+            )
+
+            # Commit both operations together
+            conn.commit()
+
+        except sqlite3.Error as e:
+            conn.rollback()
+            raise DatabaseError(f"Failed to update task with event: {e}") from e
+        finally:
+            conn.close()
+
     def _row_to_task(self, row: sqlite3.Row) -> Task:
         """Convert SQLite row to Task model.
 
@@ -192,6 +267,13 @@ class TaskRepository:
         Returns:
             Task domain model
         """
+        # Handle cancel_reason with try/except for backward compatibility
+        # (column might not exist in older database versions)
+        try:
+            cancel_reason = row["cancel_reason"]
+        except (KeyError, IndexError):
+            cancel_reason = None
+
         return Task(
             id=row["id"],
             description=row["description"],
@@ -201,6 +283,10 @@ class TaskRepository:
             completed_at=(
                 datetime.fromisoformat(row["completed_at"]) if row["completed_at"] else None
             ),
+            cancelled_at=(
+                datetime.fromisoformat(row["cancelled_at"]) if row["cancelled_at"] else None
+            ),
+            cancel_reason=cancel_reason,
             deferred_until=(
                 datetime.fromisoformat(row["deferred_until"]) if row["deferred_until"] else None
             ),

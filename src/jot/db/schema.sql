@@ -1,5 +1,5 @@
 -- jot-cli database schema
--- Version: 1
+-- Version: 2
 -- Created: 2026-01-26
 
 -- Tasks table: current state of all tasks
@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS tasks (
     created_at TEXT NOT NULL,           -- ISO 8601 format
     updated_at TEXT NOT NULL,           -- ISO 8601 format
     completed_at TEXT,                  -- ISO 8601 format, nullable
+    cancelled_at TEXT,                  -- ISO 8601 format, nullable
+    cancel_reason TEXT,                 -- Reason for cancellation, nullable
     deferred_until TEXT                 -- ISO 8601 format, nullable
 );
 

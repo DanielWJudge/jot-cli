@@ -9,7 +9,7 @@ class TestMigrationSystem:
     """Test schema versioning and migration system."""
 
     def test_initial_schema_creation(self, tmp_path, monkeypatch):
-        """Test initial schema creation (version 0 → 1)."""
+        """Test initial schema creation (version 0 → 2)."""
         monkeypatch.setattr("jot.db.connection.get_data_dir", lambda: tmp_path)
 
         from jot.db.connection import get_connection
@@ -19,14 +19,14 @@ class TestMigrationSystem:
 
         # get_connection auto-migrates to current schema
         version = get_schema_version(conn)
-        assert version == 1
+        assert version == 2
 
-        # Migrate to version 1
+        # Migrate to version 2
         migrate_schema(conn)
 
-        # Should now be version 1
+        # Should now be version 2
         version = get_schema_version(conn)
-        assert version == 1
+        assert version == 2
 
         # Verify tables exist
         cursor = conn.cursor()
@@ -47,20 +47,20 @@ class TestMigrationSystem:
 
         # get_connection auto-migrates to current schema
         version = get_schema_version(conn)
-        assert version == 1
+        assert version == 2
 
         # Migrate
         migrate_schema(conn)
 
         # Check version after migration
         version = get_schema_version(conn)
-        assert version == 1
+        assert version == 2
 
         # Verify PRAGMA user_version directly
         cursor = conn.cursor()
         cursor.execute("PRAGMA user_version")
         pragma_version = cursor.fetchone()[0]
-        assert pragma_version == 1
+        assert pragma_version == 2
 
         conn.close()
 
@@ -76,12 +76,12 @@ class TestMigrationSystem:
         # First migration
         migrate_schema(conn)
         version1 = get_schema_version(conn)
-        assert version1 == 1
+        assert version1 == 2
 
         # Second migration (should be safe)
         migrate_schema(conn)
         version2 = get_schema_version(conn)
-        assert version2 == 1
+        assert version2 == 2
 
         # Verify tables still exist and are correct
         cursor = conn.cursor()
@@ -99,14 +99,14 @@ class TestMigrationSystem:
 
         # Call without connection
         version = get_schema_version()
-        assert version == 1
+        assert version == 2
 
         # Migrate
         migrate_schema()
 
         # Check version again
         version = get_schema_version()
-        assert version == 1
+        assert version == 2
 
     def test_migrate_schema_creates_connection_if_none(self, tmp_path, monkeypatch):
         """Test migrate_schema creates connection if None provided."""
@@ -119,7 +119,7 @@ class TestMigrationSystem:
 
         # Verify migration worked
         version = get_schema_version()
-        assert version == 1
+        assert version == 2
 
     def test_migration_error_handling(self, tmp_path, monkeypatch):
         """Test migration error handling."""

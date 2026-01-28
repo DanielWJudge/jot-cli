@@ -7,7 +7,7 @@ from jot.config.paths import get_data_dir
 from jot.db.exceptions import DatabaseError
 
 # Schema version constant
-CURRENT_SCHEMA_VERSION = 1
+CURRENT_SCHEMA_VERSION = 2
 
 
 def get_connection() -> sqlite3.Connection:

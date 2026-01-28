@@ -39,6 +39,8 @@ class Task(BaseModel):
         created_at: When task was created (UTC)
         updated_at: When task was last updated (UTC)
         completed_at: When task was completed (optional)
+        cancelled_at: When task was cancelled (optional)
+        cancel_reason: Reason for cancellation (optional)
         deferred_until: When deferred task should be revisited (optional)
     """
 
@@ -48,6 +50,8 @@ class Task(BaseModel):
     created_at: datetime = Field(description="Creation timestamp (UTC)")
     updated_at: datetime = Field(description="Last update timestamp (UTC)")
     completed_at: datetime | None = Field(default=None, description="Completion timestamp (UTC)")
+    cancelled_at: datetime | None = Field(default=None, description="Cancellation timestamp (UTC)")
+    cancel_reason: str | None = Field(default=None, description="Reason for cancellation")
     deferred_until: datetime | None = Field(
         default=None, description="When to revisit deferred task"
     )
@@ -80,6 +84,8 @@ class Task(BaseModel):
                     "created_at": "2026-01-27T10:00:00Z",
                     "updated_at": "2026-01-27T10:00:00Z",
                     "completed_at": None,
+                    "cancelled_at": None,
+                    "cancel_reason": None,
                     "deferred_until": None,
                 }
             ]
