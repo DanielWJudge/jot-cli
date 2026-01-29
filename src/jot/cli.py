@@ -9,7 +9,9 @@ from rich.console import Console
 from jot.commands.add import add_command
 from jot.commands.cancel import cancel_command
 from jot.commands.defer import defer_command
+from jot.commands.deferred import deferred_command
 from jot.commands.done import done_command
+from jot.commands.resume import resume_command
 from jot.commands.status import status_command
 from jot.core.exceptions import JotError, display_error
 
@@ -50,7 +52,9 @@ def handle_jot_errors[T](func: Callable[[], T]) -> Callable[[], T]:
 app.command(name="add")(add_command)
 app.command(name="cancel")(cancel_command)
 app.command(name="defer")(defer_command)
+app.command(name="deferred")(deferred_command)
 app.command(name="done")(done_command)
+app.command(name="resume")(resume_command)
 app.command(name="status")(status_command)
 
 

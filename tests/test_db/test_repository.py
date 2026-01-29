@@ -143,6 +143,173 @@ class TestTaskRepository:
         assert active.id == active_id
         assert active.state == TaskState.ACTIVE
 
+    def test_get_deferred_tasks_returns_all_deferred_tasks(self, temp_db):
+        """Test get_deferred_tasks() returns all deferred tasks."""
+        repo = TaskRepository()
+
+        # Create multiple deferred tasks
+        now = datetime.now(UTC)
+        task1 = Task(
+            id=str(uuid.uuid4()),
+            description="Deferred task 1",
+            state=TaskState.DEFERRED,
+            created_at=now,
+            updated_at=now,
+            deferred_at=now,
+            defer_reason="reason 1",
+        )
+        task2 = Task(
+            id=str(uuid.uuid4()),
+            description="Deferred task 2",
+            state=TaskState.DEFERRED,
+            created_at=now,
+            updated_at=now,
+            deferred_at=now,
+            defer_reason="reason 2",
+        )
+        repo.create_task(task1)
+        repo.create_task(task2)
+
+        # Create an active task (should not be included)
+        active_task = Task(
+            id=str(uuid.uuid4()),
+            description="Active task",
+            state=TaskState.ACTIVE,
+            created_at=now,
+            updated_at=now,
+        )
+        repo.create_task(active_task)
+
+        deferred_tasks = repo.get_deferred_tasks()
+
+        assert len(deferred_tasks) == 2
+        task_ids = {task.id for task in deferred_tasks}
+        assert task1.id in task_ids
+        assert task2.id in task_ids
+
+    def test_get_deferred_tasks_orders_by_deferred_at_oldest_first(self, temp_db):
+        """Test get_deferred_tasks() orders by deferred_at timestamp (oldest first)."""
+        from datetime import timedelta
+
+        repo = TaskRepository()
+
+        # Create deferred tasks with different timestamps
+        # Use explicit time offset to ensure task1 is always older than task2
+        base_time = datetime.now(UTC)
+        older_time = base_time - timedelta(seconds=10)  # 10 seconds earlier
+        newer_time = base_time  # Current time
+        task1 = Task(
+            id=str(uuid.uuid4()),
+            description="Oldest deferred",
+            state=TaskState.DEFERRED,
+            created_at=older_time,
+            updated_at=older_time,
+            deferred_at=older_time,  # Oldest - 10 seconds before task2
+            defer_reason="reason 1",
+        )
+        task2 = Task(
+            id=str(uuid.uuid4()),
+            description="Newest deferred",
+            state=TaskState.DEFERRED,
+            created_at=newer_time,
+            updated_at=newer_time,
+            deferred_at=newer_time,  # Newer - current time
+            defer_reason="reason 2",
+        )
+        repo.create_task(task1)
+        repo.create_task(task2)
+
+        deferred_tasks = repo.get_deferred_tasks()
+
+        assert len(deferred_tasks) == 2
+        assert deferred_tasks[0].id == task1.id  # Oldest first
+        assert deferred_tasks[1].id == task2.id  # Newest second
+
+    def test_get_deferred_tasks_returns_empty_list_when_no_deferred(self, temp_db):
+        """Test get_deferred_tasks() returns empty list when no deferred tasks."""
+        repo = TaskRepository()
+
+        deferred_tasks = repo.get_deferred_tasks()
+
+        assert deferred_tasks == []
+
+    def test_get_deferred_tasks_returns_pydantic_models(self, temp_db):
+        """Test get_deferred_tasks() returns Pydantic Task models."""
+        repo = TaskRepository()
+
+        now = datetime.now(UTC)
+        task = Task(
+            id=str(uuid.uuid4()),
+            description="Deferred task",
+            state=TaskState.DEFERRED,
+            created_at=now,
+            updated_at=now,
+            deferred_at=now,
+            defer_reason="test reason",
+        )
+        repo.create_task(task)
+
+        deferred_tasks = repo.get_deferred_tasks()
+
+        assert len(deferred_tasks) == 1
+        assert isinstance(deferred_tasks[0], Task)
+        assert not isinstance(deferred_tasks[0], sqlite3.Row)
+
+    def test_resume_task_updates_state_to_active(self, temp_db):
+        """Test resume_task() updates task state from DEFERRED to ACTIVE."""
+        repo = TaskRepository()
+        event_repo = EventRepository()
+
+        # Create deferred task
+        task_id = str(uuid.uuid4())
+        now = datetime.now(UTC)
+        deferred_task = Task(
+            id=task_id,
+            description="Deferred task",
+            state=TaskState.DEFERRED,
+            created_at=now,
+            updated_at=now,
+            deferred_at=now,
+            defer_reason="test reason",
+        )
+        repo.create_task(deferred_task)
+
+        # Resume task
+        later = datetime.now(UTC)
+        resumed_task = Task(
+            id=task_id,
+            description=deferred_task.description,
+            state=TaskState.ACTIVE,
+            created_at=deferred_task.created_at,
+            updated_at=later,
+            completed_at=None,
+            cancelled_at=None,
+            cancel_reason=None,
+            deferred_at=None,  # Cleared
+            defer_reason=None,  # Cleared
+            deferred_until=None,
+        )
+        event = TaskEvent(
+            id=0,
+            task_id=task_id,
+            event_type="RESUMED",
+            timestamp=later,
+            metadata=None,
+        )
+        repo.update_task_with_event(resumed_task, event)
+
+        # Verify task is now active
+        retrieved = repo.get_task_by_id(task_id)
+        assert retrieved.state == TaskState.ACTIVE
+        assert retrieved.deferred_at is None
+        assert retrieved.defer_reason is None
+
+        # Verify RESUMED event was created
+        events = event_repo.get_events_for_task(task_id)
+        resumed_events = [e for e in events if e.event_type == "RESUMED"]
+        assert len(resumed_events) == 1
+        assert resumed_events[0].task_id == task_id
+
     def test_update_task_updates_fields(self, temp_db):
         """Test update_task() updates task fields."""
         repo = TaskRepository()

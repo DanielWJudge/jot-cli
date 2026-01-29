@@ -114,8 +114,8 @@ class TaskEvent(BaseModel):
 
     id: int = Field(description="Event ID")
     task_id: str = Field(description="Task ID this event relates to")
-    event_type: Literal["CREATED", "COMPLETED", "CANCELLED", "DEFERRED"] = Field(
-        description="Event type (CREATED, COMPLETED, CANCELLED, DEFERRED)"
+    event_type: Literal["CREATED", "COMPLETED", "CANCELLED", "DEFERRED", "RESUMED"] = Field(
+        description="Event type (CREATED, COMPLETED, CANCELLED, DEFERRED, RESUMED)"
     )
     timestamp: datetime = Field(description="Event timestamp (UTC)")
     metadata: str | None = Field(default=None, description="Optional JSON metadata")

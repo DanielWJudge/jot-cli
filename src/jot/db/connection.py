@@ -6,8 +6,17 @@ import sqlite3
 from jot.config.paths import get_data_dir
 from jot.db.exceptions import DatabaseError
 
-# Schema version constant
-CURRENT_SCHEMA_VERSION = 3
+# Schema version constant - the single source of truth for database schema version.
+#
+# IMPORTANT: When adding a new migration:
+# 1. Increment this constant (e.g., 4 → 5)
+# 2. Add a new _migrate_to_version_N function in migrations.py
+# 3. Update migrate_schema() to call the new migration function
+# 4. Update schema.sql to reflect the final schema state
+# 5. Tests automatically use this constant - no test updates needed!
+#
+# See migrations.py for migration implementation details.
+CURRENT_SCHEMA_VERSION = 4
 
 
 def get_connection() -> sqlite3.Connection:

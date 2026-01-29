@@ -143,6 +143,33 @@ class TaskRepository:
         finally:
             conn.close()
 
+    def get_deferred_tasks(self) -> list[Task]:
+        """Get all deferred tasks.
+
+        Returns:
+            List of deferred tasks, ordered by deferred_at timestamp (oldest first).
+
+        Raises:
+            DatabaseError: If query fails
+        """
+        conn = get_connection()
+        try:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+
+            cursor.execute(
+                "SELECT * FROM tasks WHERE state = ? ORDER BY deferred_at ASC",
+                (TaskState.DEFERRED.value,),
+            )
+
+            rows = cursor.fetchall()
+            return [self._row_to_task(row) for row in rows]
+
+        except sqlite3.Error as e:
+            raise DatabaseError(f"Failed to get deferred tasks: {e}") from e
+        finally:
+            conn.close()
+
     def update_task(self, task: Task) -> None:
         """Update an existing task.
 

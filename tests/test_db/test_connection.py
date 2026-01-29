@@ -1,9 +1,15 @@
-"""Test suite for db.connection module."""
+"""Test suite for db.connection module.
+
+NOTE: Tests use CURRENT_SCHEMA_VERSION constant to avoid hardcoding version numbers.
+When adding new migrations, increment CURRENT_SCHEMA_VERSION in jot/db/connection.py
+and these tests will automatically verify the new version.
+"""
 
 import os
 
 import pytest
 
+from jot.db.connection import CURRENT_SCHEMA_VERSION
 from jot.db.exceptions import DatabaseError
 
 
@@ -67,7 +73,7 @@ class TestDatabaseConnection:
         cursor.execute("PRAGMA user_version")
         version = cursor.fetchone()[0]
 
-        assert version == 3  # Should be set to current schema version
+        assert version == CURRENT_SCHEMA_VERSION
         conn.close()
 
     def test_creates_initial_schema(self, tmp_path, monkeypatch):

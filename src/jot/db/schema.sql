@@ -1,6 +1,6 @@
 -- jot-cli database schema
--- Version: 3
--- Updated: 2026-01-29 (Added deferred_at, defer_reason columns)
+-- Version: 4
+-- Updated: 2026-01-29 (Added RESUMED event type)
 
 -- Tasks table: current state of all tasks
 CREATE TABLE IF NOT EXISTS tasks (
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS tasks (
 CREATE TABLE IF NOT EXISTS task_events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     task_id TEXT NOT NULL,
-    event_type TEXT NOT NULL CHECK(event_type IN ('CREATED', 'COMPLETED', 'CANCELLED', 'DEFERRED')),
+    event_type TEXT NOT NULL CHECK(event_type IN ('CREATED', 'COMPLETED', 'CANCELLED', 'DEFERRED', 'RESUMED')),
     timestamp TEXT NOT NULL,            -- ISO 8601 format
     metadata TEXT,                      -- JSON string, nullable
     FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE

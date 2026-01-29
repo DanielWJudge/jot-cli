@@ -1,7 +1,13 @@
-"""Test suite for db.migrations module."""
+"""Test suite for db.migrations module.
+
+NOTE: Tests use CURRENT_SCHEMA_VERSION constant to avoid hardcoding version numbers.
+When adding new migrations, increment CURRENT_SCHEMA_VERSION in jot/db/connection.py
+and these tests will automatically verify the new version.
+"""
 
 import pytest
 
+from jot.db.connection import CURRENT_SCHEMA_VERSION
 from jot.db.exceptions import DatabaseError
 
 
@@ -9,7 +15,7 @@ class TestMigrationSystem:
     """Test schema versioning and migration system."""
 
     def test_initial_schema_creation(self, tmp_path, monkeypatch):
-        """Test initial schema creation (version 0 → 3)."""
+        """Test initial schema creation migrates to CURRENT_SCHEMA_VERSION."""
         monkeypatch.setattr("jot.db.connection.get_data_dir", lambda: tmp_path)
 
         from jot.db.connection import get_connection
@@ -19,14 +25,14 @@ class TestMigrationSystem:
 
         # get_connection auto-migrates to current schema
         version = get_schema_version(conn)
-        assert version == 3
+        assert version == CURRENT_SCHEMA_VERSION
 
-        # Migrate to version 3
+        # Migrate again (idempotent)
         migrate_schema(conn)
 
-        # Should now be version 3
+        # Should still be at CURRENT_SCHEMA_VERSION
         version = get_schema_version(conn)
-        assert version == 3
+        assert version == CURRENT_SCHEMA_VERSION
 
         # Verify tables exist
         cursor = conn.cursor()
@@ -47,20 +53,20 @@ class TestMigrationSystem:
 
         # get_connection auto-migrates to current schema
         version = get_schema_version(conn)
-        assert version == 3
+        assert version == CURRENT_SCHEMA_VERSION
 
         # Migrate
         migrate_schema(conn)
 
         # Check version after migration
         version = get_schema_version(conn)
-        assert version == 3
+        assert version == CURRENT_SCHEMA_VERSION
 
         # Verify PRAGMA user_version directly
         cursor = conn.cursor()
         cursor.execute("PRAGMA user_version")
         pragma_version = cursor.fetchone()[0]
-        assert pragma_version == 3
+        assert pragma_version == CURRENT_SCHEMA_VERSION
 
         conn.close()
 
@@ -76,12 +82,12 @@ class TestMigrationSystem:
         # First migration
         migrate_schema(conn)
         version1 = get_schema_version(conn)
-        assert version1 == 3
+        assert version1 == CURRENT_SCHEMA_VERSION
 
         # Second migration (should be safe)
         migrate_schema(conn)
         version2 = get_schema_version(conn)
-        assert version2 == 3
+        assert version2 == CURRENT_SCHEMA_VERSION
 
         # Verify tables still exist and are correct
         cursor = conn.cursor()
@@ -99,14 +105,14 @@ class TestMigrationSystem:
 
         # Call without connection
         version = get_schema_version()
-        assert version == 3
+        assert version == CURRENT_SCHEMA_VERSION
 
         # Migrate
         migrate_schema()
 
         # Check version again
         version = get_schema_version()
-        assert version == 3
+        assert version == CURRENT_SCHEMA_VERSION
 
     def test_migrate_schema_creates_connection_if_none(self, tmp_path, monkeypatch):
         """Test migrate_schema creates connection if None provided."""
@@ -119,7 +125,7 @@ class TestMigrationSystem:
 
         # Verify migration worked
         version = get_schema_version()
-        assert version == 3
+        assert version == CURRENT_SCHEMA_VERSION
 
     def test_migration_error_handling(self, tmp_path, monkeypatch):
         """Test migration error handling."""
