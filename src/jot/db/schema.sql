@@ -1,6 +1,6 @@
 -- jot-cli database schema
--- Version: 2
--- Created: 2026-01-26
+-- Version: 3
+-- Updated: 2026-01-29 (Added deferred_at, defer_reason columns)
 
 -- Tasks table: current state of all tasks
 CREATE TABLE IF NOT EXISTS tasks (
@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS tasks (
     completed_at TEXT,                  -- ISO 8601 format, nullable
     cancelled_at TEXT,                  -- ISO 8601 format, nullable
     cancel_reason TEXT,                 -- Reason for cancellation, nullable
+    deferred_at TEXT,                  -- ISO 8601 format, nullable
+    defer_reason TEXT,                 -- Reason for deferral, nullable
     deferred_until TEXT                 -- ISO 8601 format, nullable
 );
 

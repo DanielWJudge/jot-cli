@@ -90,17 +90,17 @@ class TestMigrationsEdgeCases:
         # First migration
         migrate_schema(conn)
         version1 = get_schema_version(conn)
-        assert version1 == 2  # Updated to version 2
+        assert version1 == 3  # Updated to version 3
 
         # Second migration (should be idempotent)
         migrate_schema(conn)
         version2 = get_schema_version(conn)
-        assert version2 == 2  # Updated to version 2
+        assert version2 == 3  # Updated to version 3
 
         # Third migration (should still be idempotent)
         migrate_schema(conn)
         version3 = get_schema_version(conn)
-        assert version3 == 2  # Updated to version 2
+        assert version3 == 3  # Updated to version 3
 
         # Verify tables still exist
         cursor = conn.cursor()
@@ -121,7 +121,7 @@ class TestMigrationsEdgeCases:
 
         # get_connection auto-migrates to current schema
         version = get_schema_version(conn)
-        assert version == 2  # Updated to version 2
+        assert version == 3  # Updated to version 3
 
         # Manually set version to a high number
         cursor = conn.cursor()
@@ -133,8 +133,8 @@ class TestMigrationsEdgeCases:
 
         conn.close()
 
-    def test_migration_from_version_1_to_version_2(self, tmp_path, monkeypatch):
-        """Test migration from schema version 1 to version 2."""
+    def test_migration_from_version_1_to_version_3(self, tmp_path, monkeypatch):
+        """Test migration from schema version 1 to version 3 (via version 2)."""
         monkeypatch.setattr("jot.db.connection.get_data_dir", lambda: tmp_path)
 
         import sqlite3
@@ -147,7 +147,7 @@ class TestMigrationsEdgeCases:
         conn = sqlite3.connect(str(db_path))
         cursor = conn.cursor()
 
-        # Create version 1 schema (without cancelled_at and cancel_reason)
+        # Create version 1 schema (without cancelled_at, cancel_reason, deferred_at, defer_reason)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS tasks (
                 id TEXT PRIMARY KEY,
@@ -185,32 +185,39 @@ class TestMigrationsEdgeCases:
         conn.commit()
         conn.close()
 
-        # Now migrate to version 2
+        # Now migrate to version 3 (via version 2)
         conn = get_connection()
         migrate_schema(conn)
 
-        # Verify version is now 2
+        # Verify version is now 3
         version = get_schema_version(conn)
-        assert version == 2
+        assert version == 3
 
-        # Verify cancelled_at and cancel_reason columns exist
+        # Verify cancelled_at, cancel_reason, deferred_at, and defer_reason columns exist
         cursor = conn.cursor()
         cursor.execute("PRAGMA table_info(tasks)")
         columns = cursor.fetchall()
         column_names = [col[1] for col in columns]
         assert "cancelled_at" in column_names
         assert "cancel_reason" in column_names
+        assert "deferred_at" in column_names
+        assert "defer_reason" in column_names
 
         # Verify existing task has NULL values for new columns
-        cursor.execute("SELECT cancelled_at, cancel_reason FROM tasks WHERE id = ?", ("test-id",))
+        cursor.execute(
+            "SELECT cancelled_at, cancel_reason, deferred_at, defer_reason FROM tasks WHERE id = ?",
+            ("test-id",),
+        )
         row = cursor.fetchone()
         assert row[0] is None  # cancelled_at
         assert row[1] is None  # cancel_reason
+        assert row[2] is None  # deferred_at
+        assert row[3] is None  # defer_reason
 
         conn.close()
 
-    def test_migration_to_version_2_idempotent(self, tmp_path, monkeypatch):
-        """Test that migration to version 2 is idempotent."""
+    def test_migration_to_version_3_idempotent(self, tmp_path, monkeypatch):
+        """Test that migration to version 3 is idempotent."""
         monkeypatch.setattr("jot.db.connection.get_data_dir", lambda: tmp_path)
 
         from jot.db.connection import get_connection
@@ -218,20 +225,20 @@ class TestMigrationsEdgeCases:
 
         conn = get_connection()
 
-        # First migration (should migrate to version 2)
+        # First migration (should migrate to version 3)
         migrate_schema(conn)
         version1 = get_schema_version(conn)
-        assert version1 == 2
+        assert version1 == 3
 
         # Second migration (should be idempotent)
         migrate_schema(conn)
         version2 = get_schema_version(conn)
-        assert version2 == 2
+        assert version2 == 3
 
         # Third migration (should still be idempotent)
         migrate_schema(conn)
         version3 = get_schema_version(conn)
-        assert version3 == 2
+        assert version3 == 3
 
         # Verify columns still exist
         cursor = conn.cursor()
@@ -240,5 +247,7 @@ class TestMigrationsEdgeCases:
         column_names = [col[1] for col in columns]
         assert "cancelled_at" in column_names
         assert "cancel_reason" in column_names
+        assert "deferred_at" in column_names
+        assert "defer_reason" in column_names
 
         conn.close()

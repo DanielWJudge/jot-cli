@@ -43,8 +43,9 @@ class TaskRepository:
                 """
                 INSERT INTO tasks (
                     id, description, state, created_at, updated_at,
-                    completed_at, cancelled_at, cancel_reason, deferred_until
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    completed_at, cancelled_at, cancel_reason,
+                    deferred_at, defer_reason, deferred_until
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     task.id,
@@ -55,6 +56,8 @@ class TaskRepository:
                     task.completed_at.isoformat() if task.completed_at else None,
                     task.cancelled_at.isoformat() if task.cancelled_at else None,
                     task.cancel_reason,
+                    task.deferred_at.isoformat() if task.deferred_at else None,
+                    task.defer_reason,
                     task.deferred_until.isoformat() if task.deferred_until else None,
                 ),
             )
@@ -163,6 +166,8 @@ class TaskRepository:
                     completed_at = ?,
                     cancelled_at = ?,
                     cancel_reason = ?,
+                    deferred_at = ?,
+                    defer_reason = ?,
                     deferred_until = ?
                 WHERE id = ?
                 """,
@@ -173,6 +178,8 @@ class TaskRepository:
                     task.completed_at.isoformat() if task.completed_at else None,
                     task.cancelled_at.isoformat() if task.cancelled_at else None,
                     task.cancel_reason,
+                    task.deferred_at.isoformat() if task.deferred_at else None,
+                    task.defer_reason,
                     task.deferred_until.isoformat() if task.deferred_until else None,
                     task.id,
                 ),
@@ -217,6 +224,8 @@ class TaskRepository:
                     completed_at = ?,
                     cancelled_at = ?,
                     cancel_reason = ?,
+                    deferred_at = ?,
+                    defer_reason = ?,
                     deferred_until = ?
                 WHERE id = ?
                 """,
@@ -227,6 +236,8 @@ class TaskRepository:
                     task.completed_at.isoformat() if task.completed_at else None,
                     task.cancelled_at.isoformat() if task.cancelled_at else None,
                     task.cancel_reason,
+                    task.deferred_at.isoformat() if task.deferred_at else None,
+                    task.defer_reason,
                     task.deferred_until.isoformat() if task.deferred_until else None,
                     task.id,
                 ),
@@ -267,12 +278,29 @@ class TaskRepository:
         Returns:
             Task domain model
         """
-        # Handle cancel_reason with try/except for backward compatibility
-        # (column might not exist in older database versions)
+        # Handle optional fields with try/except for backward compatibility
+        # (columns might not exist in older database versions)
         try:
             cancel_reason = row["cancel_reason"]
         except (KeyError, IndexError):
             cancel_reason = None
+
+        try:
+            deferred_at = datetime.fromisoformat(row["deferred_at"]) if row["deferred_at"] else None
+        except (KeyError, IndexError):
+            deferred_at = None
+
+        try:
+            defer_reason = row["defer_reason"]
+        except (KeyError, IndexError):
+            defer_reason = None
+
+        try:
+            deferred_until = (
+                datetime.fromisoformat(row["deferred_until"]) if row["deferred_until"] else None
+            )
+        except (KeyError, IndexError):
+            deferred_until = None
 
         return Task(
             id=row["id"],
@@ -287,9 +315,9 @@ class TaskRepository:
                 datetime.fromisoformat(row["cancelled_at"]) if row["cancelled_at"] else None
             ),
             cancel_reason=cancel_reason,
-            deferred_until=(
-                datetime.fromisoformat(row["deferred_until"]) if row["deferred_until"] else None
-            ),
+            deferred_at=deferred_at,
+            defer_reason=defer_reason,
+            deferred_until=deferred_until,
         )
 
 

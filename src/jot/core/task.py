@@ -41,6 +41,8 @@ class Task(BaseModel):
         completed_at: When task was completed (optional)
         cancelled_at: When task was cancelled (optional)
         cancel_reason: Reason for cancellation (optional)
+        deferred_at: When task was deferred (optional)
+        defer_reason: Reason for deferral (optional)
         deferred_until: When deferred task should be revisited (optional)
     """
 
@@ -52,6 +54,8 @@ class Task(BaseModel):
     completed_at: datetime | None = Field(default=None, description="Completion timestamp (UTC)")
     cancelled_at: datetime | None = Field(default=None, description="Cancellation timestamp (UTC)")
     cancel_reason: str | None = Field(default=None, description="Reason for cancellation")
+    deferred_at: datetime | None = Field(default=None, description="Deferral timestamp (UTC)")
+    defer_reason: str | None = Field(default=None, description="Reason for deferral")
     deferred_until: datetime | None = Field(
         default=None, description="When to revisit deferred task"
     )
@@ -86,6 +90,8 @@ class Task(BaseModel):
                     "completed_at": None,
                     "cancelled_at": None,
                     "cancel_reason": None,
+                    "deferred_at": None,
+                    "defer_reason": None,
                     "deferred_until": None,
                 }
             ]

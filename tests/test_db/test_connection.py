@@ -67,7 +67,7 @@ class TestDatabaseConnection:
         cursor.execute("PRAGMA user_version")
         version = cursor.fetchone()[0]
 
-        assert version == 2  # Should be set to current schema version
+        assert version == 3  # Should be set to current schema version
         conn.close()
 
     def test_creates_initial_schema(self, tmp_path, monkeypatch):
