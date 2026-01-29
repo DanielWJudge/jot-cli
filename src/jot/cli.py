@@ -1,11 +1,9 @@
 """jot CLI entry point."""
 
-import sys
-from collections.abc import Callable
-
 import typer
 from rich.console import Console
 
+from jot import __version__
 from jot.commands.add import add_command
 from jot.commands.cancel import cancel_command
 from jot.commands.defer import defer_command
@@ -13,39 +11,14 @@ from jot.commands.deferred import deferred_command
 from jot.commands.done import done_command
 from jot.commands.resume import resume_command
 from jot.commands.status import status_command
-from jot.core.exceptions import JotError, display_error
-
-# Create console instance for error output (always stderr)
-_error_console = Console(file=sys.stderr, force_terminal=True)
 
 app = typer.Typer(
     name="jot",
-    help="A terminal-based task execution tool for focused work.",
+    help="Personal task management tool - focus on one task at a time.",
+    rich_markup_mode="rich",
+    add_completion=False,
+    context_settings={"help_option_names": ["-h", "--help"]},
 )
-
-
-def handle_jot_errors[T](func: Callable[[], T]) -> Callable[[], T]:
-    """Decorator to handle JotError exceptions in command handlers.
-
-    This decorator catches JotError exceptions, displays them using Rich console
-    to stderr, and raises SystemExit with the appropriate exit code.
-
-    Example:
-        @app.command()
-        @handle_jot_errors
-        def my_command() -> None:
-            # Command implementation that may raise JotError
-            raise TaskNotFoundError("Task not found")
-    """
-
-    def wrapper() -> T:
-        try:
-            return func()
-        except JotError as e:
-            display_error(e, _error_console)
-            raise SystemExit(e.exit_code) from None
-
-    return wrapper
 
 
 # Register commands
@@ -59,29 +32,31 @@ app.command(name="status")(status_command)
 
 
 @app.callback(invoke_without_command=True)
-def callback(ctx: typer.Context) -> None:
-    """
-    Jot - A terminal-based task execution tool.
+def callback(
+    ctx: typer.Context,
+    version: bool = typer.Option(False, "--version", "-v", help="Show version and exit"),
+) -> None:
+    """Main callback - handles version flag and no-command case."""
+    if version:
+        console = Console()
+        console.print(f"jot version {__version__}")
+        raise typer.Exit(0)
 
-    Run 'jot --help' to see available commands.
-    """
     # Show help if no command provided
     if ctx.invoked_subcommand is None:
-        typer.echo(ctx.get_help())
+        console = Console()
+        console.print(ctx.get_help())
         raise typer.Exit(0)
 
 
 def main() -> None:
     """Entry point for the CLI application.
 
-    This function wraps the Typer app execution to catch any JotError
-    exceptions that might escape command handlers and handle them properly.
+    Typer automatically handles invalid commands with suggestions when
+    rich_markup_mode="rich" is enabled. Commands handle their own errors
+    and exit with appropriate codes.
     """
-    try:
-        app()
-    except JotError as e:
-        display_error(e, _error_console)
-        raise SystemExit(e.exit_code) from None
+    app()
 
 
 if __name__ == "__main__":
