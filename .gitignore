@@ -68,6 +68,7 @@ dmypy.json
 .env.*.local
 
 # Project specific
+_bmad/
 _bmad-output/
 *.db
 *.sqlite
