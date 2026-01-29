@@ -10,6 +10,7 @@ from jot.commands.add import add_command
 from jot.commands.cancel import cancel_command
 from jot.commands.defer import defer_command
 from jot.commands.done import done_command
+from jot.commands.status import status_command
 from jot.core.exceptions import JotError, display_error
 
 # Create console instance for error output (always stderr)
@@ -50,6 +51,7 @@ app.command(name="add")(add_command)
 app.command(name="cancel")(cancel_command)
 app.command(name="defer")(defer_command)
 app.command(name="done")(done_command)
+app.command(name="status")(status_command)
 
 
 @app.callback(invoke_without_command=True)
