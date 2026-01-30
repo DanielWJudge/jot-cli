@@ -19,16 +19,27 @@ _error_console = Console(file=sys.stderr, force_terminal=True)
 
 
 def add_command(
-    description: str | None = typer.Argument(None, help="Task description"),
+    description: str | None = typer.Argument(
+        None,
+        help="Task description. If not provided, you'll be prompted interactively.",
+    ),
 ) -> None:
-    """Add a new task.
+    """Add a new task to your active task list.
 
-    Creates a new active task with the given description. If no description
-    is provided, prompts the user interactively.
+    Creates a new task and sets it as the active task. If an active task already
+    exists, you'll be prompted to handle the conflict first (complete, cancel, or defer it).
 
     Examples:
-        jot add "Review PR for auth feature"
-        jot add  # Prompts for description
+        jot add "Review PR for auth feature"    # Add task with description
+        jot add                                 # Interactive prompt for description
+
+    Arguments:
+        description: Task description. If not provided, you'll be prompted interactively.
+
+    Exit Codes:
+        0: Task added successfully
+        1: User error (invalid input, conflict not resolved)
+        2: System error (database failure)
     """
     try:
         # Handle interactive prompt if no description provided

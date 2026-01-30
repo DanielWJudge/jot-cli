@@ -19,17 +19,24 @@ _error_console = Console(file=sys.stderr, force_terminal=True)
 
 
 def cancel_command(
-    reason: str | None = typer.Argument(None, help="Reason for cancelling the task"),
+    reason: str | None = typer.Argument(
+        None,
+        help="Reason for cancelling the task. If not provided, you'll be prompted interactively.",
+    ),
 ) -> None:
     """Cancel the current active task with a reason.
 
     Cancels the active task by updating its state to CANCELLED,
     recording the cancellation timestamp and reason, and logging
     a TASK_CANCELLED event with the reason in metadata.
+    This clears the active task slot, allowing you to start a new task.
 
     Examples:
         jot cancel "out of scope"  # Cancel with reason
-        jot cancel  # Prompts for reason interactively
+        jot cancel                  # Prompts for reason interactively
+
+    Arguments:
+        reason: Reason for cancelling the task. If not provided, you'll be prompted interactively.
 
     Exit Codes:
         0: Task cancelled successfully

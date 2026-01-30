@@ -45,7 +45,12 @@ def format_time_elapsed(created_at: datetime) -> str:
 
 
 def status_command(
-    quiet: bool = typer.Option(False, "--quiet", "-q", help="Exit with code 0/1 only, no output"),
+    quiet: bool = typer.Option(
+        False,
+        "--quiet",
+        "-q",
+        help="Quiet mode: exit code 0 if active task exists, 1 if not. No output.",
+    ),
 ) -> None:
     """Display the current active task.
 
@@ -56,6 +61,9 @@ def status_command(
     Examples:
         jot status              # Display active task
         jot status --quiet      # Exit code only (for scripting)
+
+    Options:
+        --quiet, -q: Quiet mode: exit code 0 if active task exists, 1 if not. No output.
 
     Exit Codes:
         0: Active task exists (or quiet mode with task)

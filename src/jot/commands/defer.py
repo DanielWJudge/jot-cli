@@ -19,17 +19,25 @@ _error_console = Console(file=sys.stderr, force_terminal=True)
 
 
 def defer_command(
-    reason: str | None = typer.Argument(None, help="Reason for deferring the task"),
+    reason: str | None = typer.Argument(
+        None,
+        help="Reason for deferring the task. If not provided, you'll be prompted interactively.",
+    ),
 ) -> None:
     """Defer the current active task with a reason.
 
     Defers the active task by updating its state to DEFERRED,
     recording the deferral timestamp and reason, and logging
     a TASK_DEFERRED event with the reason in metadata.
+    Deferred tasks can be resumed later using `jot resume`.
+    This clears the active task slot, allowing you to start a new task.
 
     Examples:
         jot defer "waiting for API access"  # Defer with reason
-        jot defer  # Prompts for reason interactively
+        jot defer                           # Prompts for reason interactively
+
+    Arguments:
+        reason: Reason for deferring the task. If not provided, you'll be prompted interactively.
 
     Exit Codes:
         0: Task deferred successfully

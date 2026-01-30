@@ -53,16 +53,23 @@ def parse_task_identifier(task_id: str, repo: TaskRepository) -> str:
 
 
 def resume_command(
-    task_id: str = typer.Argument(..., help="Task ID or number from deferred list"),
+    task_id: str = typer.Argument(
+        ...,
+        help="Task ID or number from deferred list. Use number from 'jot deferred' output or full UUID.",
+    ),
 ) -> None:
     """Resume a deferred task as the active task.
 
     Resumes a deferred task by changing its state from DEFERRED to ACTIVE.
-    If an active task already exists, prompts user to handle the conflict.
+    If an active task already exists, prompts user to handle the conflict
+    (complete, cancel, or defer the current active task first).
 
     Examples:
-        jot resume 1              # Resume first deferred task (by number)
-        jot resume <uuid>          # Resume task by UUID
+        jot resume 1              # Resume first deferred task (by number from 'jot deferred')
+        jot resume <uuid>         # Resume task by UUID
+
+    Arguments:
+        task_id: Task ID or number from deferred list. Use number from 'jot deferred' output or full UUID.
 
     Exit Codes:
         0: Task resumed successfully

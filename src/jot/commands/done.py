@@ -22,6 +22,7 @@ def done_command() -> None:
 
     Completes the active task by updating its state to COMPLETED,
     recording the completion timestamp, and logging a TASK_COMPLETED event.
+    This clears the active task slot, allowing you to start a new task.
 
     Examples:
         jot done  # Completes the current active task

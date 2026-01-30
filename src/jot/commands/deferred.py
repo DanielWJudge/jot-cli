@@ -48,6 +48,7 @@ def deferred_command() -> None:
 
     Displays all deferred tasks with their descriptions, deferral dates,
     and reasons. Tasks are numbered for easy selection with `jot resume`.
+    Use the task number with `jot resume` to resume a deferred task.
 
     Examples:
         jot deferred              # List all deferred tasks
