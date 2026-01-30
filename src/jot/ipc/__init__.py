@@ -10,5 +10,13 @@ from jot.core.exceptions import IPCError
 from jot.ipc.client import notify_monitor
 from jot.ipc.events import IPCEvent
 from jot.ipc.protocol import deserialize_message, serialize_message
+from jot.ipc.server import IPCServer
 
-__all__ = ["IPCEvent", "serialize_message", "deserialize_message", "IPCError", "notify_monitor"]
+__all__ = [
+    "IPCEvent",
+    "serialize_message",
+    "deserialize_message",
+    "IPCError",
+    "notify_monitor",
+    "IPCServer",
+]
