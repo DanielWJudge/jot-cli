@@ -49,7 +49,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-    addopts = [
+addopts = [
     "--strict-markers",
     "--strict-config",
     "--cov=jot",
@@ -57,6 +57,9 @@ python_functions = ["test_*"]
     "--cov-report=html",
     "--cov-report=xml",
 ]
+
+[tool.pytest_asyncio]
+asyncio_mode = "auto"
 
 [tool.coverage.run]
 source = ["src"]

@@ -11,6 +11,8 @@ from jot.commands.deferred import deferred_command
 from jot.commands.done import done_command
 from jot.commands.resume import resume_command
 from jot.commands.status import status_command
+from jot.config.paths import get_runtime_dir
+from jot.monitor.app import MonitorApp
 
 app = typer.Typer(
     name="jot",
@@ -29,6 +31,29 @@ app.command(name="deferred")(deferred_command)
 app.command(name="done")(done_command)
 app.command(name="resume")(resume_command)
 app.command(name="status")(status_command)
+
+
+def monitor_command() -> None:
+    """Launch the monitor window showing current active task."""
+    console = Console()
+
+    # Check if monitor is already running by checking socket file
+    socket_path = get_runtime_dir() / "monitor.sock"
+
+    if socket_path.exists():
+        console.print(
+            "[yellow]Monitor is already running.[/yellow]\n"
+            "Only one monitor instance can run at a time.",
+            style="dim",
+        )
+        raise typer.Exit(0)
+
+    # Launch Textual app
+    app_instance = MonitorApp()
+    app_instance.run()
+
+
+app.command(name="monitor")(monitor_command)
 
 
 @app.callback(invoke_without_command=True)
