@@ -71,6 +71,7 @@ dmypy.json
 # Project specific
 _bmad/
 _bmad-output/
+project-context.md
 *.db
 *.sqlite
 *.sqlite3
