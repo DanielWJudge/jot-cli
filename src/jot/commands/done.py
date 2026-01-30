@@ -1,5 +1,6 @@
 """jot done command implementation."""
 
+import contextlib
 import sys
 from datetime import UTC, datetime
 
@@ -10,6 +11,8 @@ from jot.core.exceptions import TaskNotFoundError, display_error
 from jot.core.task import Task, TaskEvent, TaskState
 from jot.db.exceptions import DatabaseError
 from jot.db.repository import EventRepository, TaskRepository
+from jot.ipc import notify_monitor
+from jot.ipc.events import IPCEvent
 
 # Create console for success messages (stdout)
 _console = Console()
@@ -69,6 +72,11 @@ def done_command() -> None:
             metadata=None,
         )
         event_repo.create_event(event)
+
+        # Notify monitor of task completion (fire-and-forget)
+        # Only suppress expected IPC socket errors, let programming errors fail
+        with contextlib.suppress(OSError, ConnectionError, TimeoutError):
+            notify_monitor(IPCEvent.TASK_COMPLETED, completed_task.id)
 
         # Display success message
         _console.print(f"✅ Completed: {completed_task.description}", style="green")
