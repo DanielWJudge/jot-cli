@@ -7,7 +7,8 @@ It MUST NOT import from commands/ or monitor/.
 """
 
 from jot.core.exceptions import IPCError
+from jot.ipc.client import notify_monitor
 from jot.ipc.events import IPCEvent
 from jot.ipc.protocol import deserialize_message, serialize_message
 
-__all__ = ["IPCEvent", "serialize_message", "deserialize_message", "IPCError"]
+__all__ = ["IPCEvent", "serialize_message", "deserialize_message", "IPCError", "notify_monitor"]

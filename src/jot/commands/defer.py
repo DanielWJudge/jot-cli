@@ -1,5 +1,6 @@
 """jot defer command implementation."""
 
+import contextlib
 import json
 import sys
 from datetime import UTC, datetime
@@ -11,6 +12,8 @@ from jot.core.exceptions import TaskNotFoundError, display_error
 from jot.core.task import Task, TaskEvent, TaskState
 from jot.db.exceptions import DatabaseError
 from jot.db.repository import TaskRepository
+from jot.ipc import notify_monitor
+from jot.ipc.events import IPCEvent
 
 # Create console for success messages (stdout)
 _console = Console()
@@ -96,6 +99,11 @@ def defer_command(
 
         # Persist updated task and event atomically
         repo.update_task_with_event(deferred_task, event)
+
+        # Notify monitor of task deferral (fire-and-forget)
+        # Only suppress expected IPC socket errors, let programming errors fail
+        with contextlib.suppress(OSError, ConnectionError, TimeoutError):
+            notify_monitor(IPCEvent.TASK_DEFERRED, deferred_task.id)
 
         # Display success message
         _console.print(
