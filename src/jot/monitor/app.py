@@ -110,7 +110,9 @@ class MonitorApp(App):  # type: ignore[misc]
             # Apply Textual styles from theme module with error handling
             try:
                 if "foreground" in style_dict:
-                    self._task_widget.styles.color = style_dict["foreground"]
+                    foreground_value = style_dict["foreground"]
+                    if isinstance(foreground_value, str):
+                        self._task_widget.styles.color = foreground_value
                 if style_dict.get("bold"):
                     self._task_widget.styles.text_style = "bold"
                 if style_dict.get("dim"):

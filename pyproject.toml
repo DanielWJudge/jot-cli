@@ -98,5 +98,9 @@ module = "jot.cli"
 disable_error_code = ["untyped-decorator"]
 
 [[tool.mypy.overrides]]
+module = "jot.monitor.app"
+warn_unused_ignores = false
+
+[[tool.mypy.overrides]]
 module = "tests.*"
 disallow_untyped_defs = false
