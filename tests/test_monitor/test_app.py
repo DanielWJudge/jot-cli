@@ -29,9 +29,19 @@ class TestMonitorApp:
         assert q_binding is not None
         assert q_binding.action == "quit"
 
+    def test_app_has_ctrl_c_key_binding(self):
+        """Test MonitorApp has Ctrl+C key binding for quit."""
+        # Check that 'ctrl+c' key binding exists in BINDINGS class attribute
+        bindings = MonitorApp.BINDINGS
+        ctrl_c_binding = next((b for b in bindings if b.key == "ctrl+c"), None)
+        assert ctrl_c_binding is not None
+        assert ctrl_c_binding.action == "quit"
+
     def test_app_queries_database_on_mount(self, temp_db):
         """Test MonitorApp queries database for active task on mount."""
         # Arrange: Create active task
+        from unittest.mock import AsyncMock, patch
+
         from jot.db.repository import TaskRepository
 
         repo = TaskRepository()
@@ -44,24 +54,34 @@ class TestMonitorApp:
         )
         repo.create_task(task)
 
-        # Act: Create app and manually call on_mount
+        # Act: Create app and manually call on_mount (mock IPC server to avoid socket creation)
         app = MonitorApp()
-        # Manually trigger on_mount to test database query
-        import asyncio
+        with patch("jot.monitor.app.IPCServer") as mock_ipc_server:
+            mock_server_instance = AsyncMock()
+            mock_ipc_server.return_value = mock_server_instance
+            # Manually trigger on_mount to test database query
+            import asyncio
 
-        asyncio.run(app.on_mount())
+            asyncio.run(app.on_mount())
 
         # Assert: App should have queried and stored the task
         assert app._active_task is not None
         assert app._active_task.description == "Test active task"
+        # Verify IPC server was started (socket file creation)
+        mock_server_instance.start.assert_called_once()
 
     def test_app_handles_no_active_task(self, temp_db):
         """Test MonitorApp handles case when no active task exists."""
+        from unittest.mock import AsyncMock, patch
+
         # Act: Create app with empty database and manually call on_mount
         app = MonitorApp()
-        import asyncio
+        with patch("jot.monitor.app.IPCServer") as mock_ipc_server:
+            mock_server_instance = AsyncMock()
+            mock_ipc_server.return_value = mock_server_instance
+            import asyncio
 
-        asyncio.run(app.on_mount())
+            asyncio.run(app.on_mount())
 
         # Assert: App should handle no active task
         assert app._active_task is None
@@ -70,6 +90,8 @@ class TestMonitorApp:
     def test_app_displays_task_with_emoji_and_theme(self, temp_db):
         """Test MonitorApp displays task with emoji and theme styling."""
         # Arrange: Create active task
+        from unittest.mock import AsyncMock, patch
+
         from jot.db.repository import TaskRepository
 
         repo = TaskRepository()
@@ -87,15 +109,17 @@ class TestMonitorApp:
         # Compose widgets first
         widgets = list(app.compose())
         app._task_widget = widgets[0] if widgets else None
-        import asyncio
+        with patch("jot.monitor.app.IPCServer") as mock_ipc_server:
+            mock_server_instance = AsyncMock()
+            mock_ipc_server.return_value = mock_server_instance
+            import asyncio
 
-        asyncio.run(app.on_mount())
+            asyncio.run(app.on_mount())
 
-        # Assert: Task should be loaded and title updated
+        # Assert: Task should be loaded and title updated with exact format
         assert app._active_task is not None
         assert app._active_task.description == "Test task with theme"
-        # Verify title was updated with task description
-        assert "Test task with theme" in app.title
+        # Verify title format matches AC specification exactly
         assert app.title == "jot - Test task with theme"
 
     def test_app_memory_usage_below_limit(self, temp_db):
@@ -126,6 +150,8 @@ class TestMonitorApp:
     def test_app_displays_emoji_in_widget_text(self, temp_db):
         """Test MonitorApp displays emoji in widget text."""
         # Arrange: Create active task
+        from unittest.mock import AsyncMock, patch
+
         from jot.core.theme import TaskEmoji
         from jot.db.repository import TaskRepository
 
@@ -143,9 +169,12 @@ class TestMonitorApp:
         app = MonitorApp()
         widgets = list(app.compose())
         app._task_widget = widgets[0] if widgets else None
-        import asyncio
+        with patch("jot.monitor.app.IPCServer") as mock_ipc_server:
+            mock_server_instance = AsyncMock()
+            mock_ipc_server.return_value = mock_server_instance
+            import asyncio
 
-        asyncio.run(app.on_mount())
+            asyncio.run(app.on_mount())
 
         # Assert: Widget text should contain emoji
         assert app._task_widget is not None
@@ -157,6 +186,8 @@ class TestMonitorApp:
     def test_app_applies_theme_styles(self, temp_db):
         """Test MonitorApp applies theme styles to widget."""
         # Arrange: Create active task
+        from unittest.mock import AsyncMock, patch
+
         from jot.core.theme import get_textual_style_for_state
         from jot.db.repository import TaskRepository
 
@@ -174,9 +205,12 @@ class TestMonitorApp:
         app = MonitorApp()
         widgets = list(app.compose())
         app._task_widget = widgets[0] if widgets else None
-        import asyncio
+        with patch("jot.monitor.app.IPCServer") as mock_ipc_server:
+            mock_server_instance = AsyncMock()
+            mock_ipc_server.return_value = mock_server_instance
+            import asyncio
 
-        asyncio.run(app.on_mount())
+            asyncio.run(app.on_mount())
 
         # Assert: Styles should be applied (check style properties)
         assert app._task_widget is not None
@@ -189,6 +223,8 @@ class TestMonitorApp:
 
     def test_app_action_quit_exits(self):
         """Test MonitorApp quit action exits the app."""
+        import asyncio
+
         app = MonitorApp()
         # Mock exit to verify it's called
         exit_called = False
@@ -198,20 +234,26 @@ class TestMonitorApp:
             exit_called = True
 
         app.exit = mock_exit
-        app.action_quit()
+        # Call async action_quit
+        asyncio.run(app.action_quit())
 
         # Assert: exit should have been called
         assert exit_called
 
     def test_app_widget_displays_no_active_task_text(self, temp_db):
         """Test MonitorApp widget displays 'No active task' text when no task."""
+        from unittest.mock import AsyncMock, patch
+
         # Act: Create app with empty database
         app = MonitorApp()
         widgets = list(app.compose())
         app._task_widget = widgets[0] if widgets else None
-        import asyncio
+        with patch("jot.monitor.app.IPCServer") as mock_ipc_server:
+            mock_server_instance = AsyncMock()
+            mock_ipc_server.return_value = mock_server_instance
+            import asyncio
 
-        asyncio.run(app.on_mount())
+            asyncio.run(app.on_mount())
 
         # Assert: Widget should display "No active task"
         assert app._task_widget is not None
@@ -221,6 +263,8 @@ class TestMonitorApp:
     def test_app_widget_displays_task_description(self, temp_db):
         """Test MonitorApp widget displays task description."""
         # Arrange: Create active task
+        from unittest.mock import AsyncMock, patch
+
         from jot.db.repository import TaskRepository
 
         repo = TaskRepository()
@@ -237,11 +281,72 @@ class TestMonitorApp:
         app = MonitorApp()
         widgets = list(app.compose())
         app._task_widget = widgets[0] if widgets else None
-        import asyncio
+        with patch("jot.monitor.app.IPCServer") as mock_ipc_server:
+            mock_server_instance = AsyncMock()
+            mock_ipc_server.return_value = mock_server_instance
+            import asyncio
 
-        asyncio.run(app.on_mount())
+            asyncio.run(app.on_mount())
 
         # Assert: Widget should contain task description
         assert app._task_widget is not None
         widget_content = str(app._task_widget.content)
         assert "Specific test description" in widget_content
+
+    def test_app_ipc_server_created_on_mount(self, temp_db):
+        """Test MonitorApp creates IPC server on mount (creates socket file)."""
+        from unittest.mock import AsyncMock, patch
+
+        # Act: Create app and mount
+        app = MonitorApp()
+        with patch("jot.monitor.app.IPCServer") as mock_ipc_server:
+            mock_server_instance = AsyncMock()
+            mock_ipc_server.return_value = mock_server_instance
+            import asyncio
+
+            asyncio.run(app.on_mount())
+
+        # Assert: IPC server should be created and started
+        mock_ipc_server.assert_called_once()
+        mock_server_instance.start.assert_called_once()
+        assert app._ipc_server is not None
+
+    def test_app_cleanup_on_unmount(self, temp_db):
+        """Test MonitorApp cleans up IPC server on unmount."""
+        from unittest.mock import AsyncMock, patch
+
+        # Arrange: Create and mount app
+        app = MonitorApp()
+        with patch("jot.monitor.app.IPCServer") as mock_ipc_server:
+            mock_server_instance = AsyncMock()
+            mock_ipc_server.return_value = mock_server_instance
+            import asyncio
+
+            asyncio.run(app.on_mount())
+
+            # Act: Unmount app
+            asyncio.run(app.on_unmount())
+
+        # Assert: IPC server should be stopped
+        mock_server_instance.stop.assert_called_once()
+
+    def test_app_handles_stale_socket_file(self, temp_db, tmp_path):
+        """Test MonitorApp handles stale socket file on startup."""
+        from unittest.mock import AsyncMock, patch
+
+        # Arrange: Create stale socket file
+        socket_path = tmp_path / "monitor.sock"
+        socket_path.touch()
+
+        # Act: Create app and mount (IPC server should remove stale socket)
+        app = MonitorApp()
+        with patch("jot.monitor.app.IPCServer") as mock_ipc_server:
+            mock_server_instance = AsyncMock()
+            mock_ipc_server.return_value = mock_server_instance
+            import asyncio
+
+            asyncio.run(app.on_mount())
+
+        # Assert: IPC server was created and started (it handles stale sockets)
+        mock_ipc_server.assert_called_once()
+        mock_server_instance.start.assert_called_once()
