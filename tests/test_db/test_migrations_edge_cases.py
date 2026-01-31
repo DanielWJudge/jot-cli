@@ -154,7 +154,8 @@ class TestMigrationsEdgeCases:
         cursor = conn.cursor()
 
         # Create version 1 schema (without cancelled_at, cancel_reason, deferred_at, defer_reason, deferred_until)
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS tasks (
                 id TEXT PRIMARY KEY,
                 description TEXT NOT NULL,
@@ -163,8 +164,10 @@ class TestMigrationsEdgeCases:
                 updated_at TEXT NOT NULL,
                 completed_at TEXT
             )
-            """)
-        cursor.execute("""
+            """
+        )
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS task_events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 task_id TEXT NOT NULL,
@@ -173,7 +176,8 @@ class TestMigrationsEdgeCases:
                 metadata TEXT,
                 FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
             )
-            """)
+            """
+        )
 
         # Set version to 1
         cursor.execute("PRAGMA user_version = 1")

@@ -227,7 +227,8 @@ def _migrate_to_version_4(conn: sqlite3.Connection) -> None:
         # SQLite doesn't support ALTER TABLE to modify CHECK constraints,
         # so we need to recreate the table
         # Create new table with updated CHECK constraint
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE task_events_new (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 task_id TEXT NOT NULL,
@@ -236,14 +237,17 @@ def _migrate_to_version_4(conn: sqlite3.Connection) -> None:
                 metadata TEXT,
                 FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
             )
-            """)
+            """
+        )
 
         # Copy all data from old table to new table
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO task_events_new (id, task_id, event_type, timestamp, metadata)
             SELECT id, task_id, event_type, timestamp, metadata
             FROM task_events
-            """)
+            """
+        )
 
         # Drop old table
         cursor.execute("DROP TABLE task_events")
