@@ -15,7 +15,7 @@ import contextlib
 import logging
 import os
 import socket
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from pathlib import Path
 
 from jot.config.paths import get_runtime_dir
@@ -32,6 +32,9 @@ _HAS_AF_UNIX = hasattr(socket, "AF_UNIX")
 _SOCKET_BACKLOG = 5  # Maximum number of pending connections
 _BUFFER_SIZE = 4096  # Socket read buffer size (4KB)
 _MAX_BUFFER_SIZE = 1024 * 1024  # Maximum buffer size before disconnect (1MB)
+
+# Type alias for callback - can be sync or async
+IPCCallback = Callable[[IPCEvent, str], None] | Callable[[IPCEvent, str], Awaitable[None]]
 
 
 class IPCServer:
@@ -55,9 +58,7 @@ class IPCServer:
         >>> await server.stop()
     """
 
-    def __init__(
-        self, callback: Callable[[IPCEvent, str], None], socket_path: Path | None = None
-    ) -> None:
+    def __init__(self, callback: IPCCallback, socket_path: Path | None = None) -> None:
         """Initialize IPC server.
 
         Args:

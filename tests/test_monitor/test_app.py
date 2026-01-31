@@ -353,6 +353,7 @@ class TestMonitorApp:
 
     def test_handle_ipc_event_queries_database_on_task_created(self, temp_db):
         """Test _handle_ipc_event queries database when TASK_CREATED event received."""
+        import asyncio
 
         from jot.db.repository import TaskRepository
         from jot.ipc.events import IPCEvent
@@ -376,8 +377,8 @@ class TestMonitorApp:
         app._active_task = None
         app._update_display()
 
-        # Act: Simulate IPC event
-        app._handle_ipc_event(IPCEvent.TASK_CREATED, task.id)
+        # Act: Simulate IPC event (now async)
+        asyncio.run(app._handle_ipc_event(IPCEvent.TASK_CREATED, task.id))
 
         # Assert: App should have queried database and updated display
         assert app._active_task is not None
@@ -387,6 +388,7 @@ class TestMonitorApp:
 
     def test_handle_ipc_event_handles_task_completed(self, temp_db):
         """Test _handle_ipc_event handles TASK_COMPLETED event."""
+        import asyncio
 
         from jot.db.repository import TaskRepository
         from jot.ipc.events import IPCEvent
@@ -413,8 +415,8 @@ class TestMonitorApp:
         app._active_task = task
         app._update_display()
 
-        # Act: Simulate IPC event for completion
-        app._handle_ipc_event(IPCEvent.TASK_COMPLETED, task.id)
+        # Act: Simulate IPC event for completion (now async)
+        asyncio.run(app._handle_ipc_event(IPCEvent.TASK_COMPLETED, task.id))
 
         # Assert: App should query database and find no active task
         assert app._active_task is None
@@ -423,6 +425,7 @@ class TestMonitorApp:
 
     def test_handle_ipc_event_handles_task_cancelled(self, temp_db):
         """Test _handle_ipc_event handles TASK_CANCELLED event."""
+        import asyncio
 
         from jot.db.repository import TaskRepository
         from jot.ipc.events import IPCEvent
@@ -449,8 +452,8 @@ class TestMonitorApp:
         app._active_task = task
         app._update_display()
 
-        # Act: Simulate IPC event for cancellation
-        app._handle_ipc_event(IPCEvent.TASK_CANCELLED, task.id)
+        # Act: Simulate IPC event for cancellation (now async)
+        asyncio.run(app._handle_ipc_event(IPCEvent.TASK_CANCELLED, task.id))
 
         # Assert: App should query database and find no active task
         assert app._active_task is None
@@ -459,6 +462,7 @@ class TestMonitorApp:
 
     def test_handle_ipc_event_handles_task_deferred(self, temp_db):
         """Test _handle_ipc_event handles TASK_DEFERRED event."""
+        import asyncio
 
         from jot.db.repository import TaskRepository
         from jot.ipc.events import IPCEvent
@@ -485,8 +489,8 @@ class TestMonitorApp:
         app._active_task = task
         app._update_display()
 
-        # Act: Simulate IPC event for deferral
-        app._handle_ipc_event(IPCEvent.TASK_DEFERRED, task.id)
+        # Act: Simulate IPC event for deferral (now async)
+        asyncio.run(app._handle_ipc_event(IPCEvent.TASK_DEFERRED, task.id))
 
         # Assert: App should query database and find no active task
         assert app._active_task is None
@@ -495,6 +499,7 @@ class TestMonitorApp:
 
     def test_handle_ipc_event_handles_database_error_gracefully(self, temp_db):
         """Test _handle_ipc_event handles database errors without crashing."""
+        import asyncio
 
         from jot.ipc.events import IPCEvent
 
@@ -506,9 +511,9 @@ class TestMonitorApp:
         app._update_display()
 
         # Act: Simulate IPC event with invalid task_id (will cause database error)
-        # Use a non-existent task ID
+        # Use a non-existent task ID (now async)
         fake_task_id = str(uuid.uuid4())
-        app._handle_ipc_event(IPCEvent.TASK_CREATED, fake_task_id)
+        asyncio.run(app._handle_ipc_event(IPCEvent.TASK_CREATED, fake_task_id))
 
         # Assert: App should still function (no crash), display unchanged
         # Since task doesn't exist, get_active_task returns None
@@ -518,6 +523,7 @@ class TestMonitorApp:
 
     def test_handle_ipc_event_handles_multiple_rapid_events(self, temp_db):
         """Test _handle_ipc_event handles multiple rapid events correctly."""
+        import asyncio
 
         from jot.db.repository import TaskRepository
         from jot.ipc.events import IPCEvent
@@ -554,10 +560,10 @@ class TestMonitorApp:
         app._active_task = None
         app._update_display()
 
-        # Act: Simulate rapid events
-        app._handle_ipc_event(IPCEvent.TASK_CREATED, task1.id)
-        app._handle_ipc_event(IPCEvent.TASK_COMPLETED, task1.id)
-        app._handle_ipc_event(IPCEvent.TASK_CREATED, task2.id)
+        # Act: Simulate rapid events (now async)
+        asyncio.run(app._handle_ipc_event(IPCEvent.TASK_CREATED, task1.id))
+        asyncio.run(app._handle_ipc_event(IPCEvent.TASK_COMPLETED, task1.id))
+        asyncio.run(app._handle_ipc_event(IPCEvent.TASK_CREATED, task2.id))
 
         # Assert: Should show task2 (most recent active task)
         assert app._active_task is not None
@@ -567,6 +573,7 @@ class TestMonitorApp:
 
     def test_handle_ipc_event_always_queries_fresh_data(self, temp_db):
         """Test _handle_ipc_event always queries fresh data, never uses stale cache."""
+        import asyncio
 
         from jot.db.repository import TaskRepository
         from jot.ipc.events import IPCEvent
@@ -593,8 +600,8 @@ class TestMonitorApp:
         task.description = "Updated description"
         repo.update_task(task)
 
-        # Act: Simulate IPC event (should query fresh, not use cached task)
-        app._handle_ipc_event(IPCEvent.TASK_CREATED, task.id)
+        # Act: Simulate IPC event (should query fresh, not use cached task) (now async)
+        asyncio.run(app._handle_ipc_event(IPCEvent.TASK_CREATED, task.id))
 
         # Assert: Should show updated description (fresh from DB)
         assert app._active_task is not None
@@ -604,6 +611,7 @@ class TestMonitorApp:
 
     def test_handle_ipc_event_performance_under_100ms(self, temp_db):
         """Test _handle_ipc_event completes within 100ms (NFR5)."""
+        import asyncio
         import time
 
         from jot.db.repository import TaskRepository
@@ -626,9 +634,9 @@ class TestMonitorApp:
         app._task_widget = widgets[0] if widgets else None
         app._active_task = None
 
-        # Act: Measure latency
+        # Act: Measure latency (now async)
         start_time = time.perf_counter()
-        app._handle_ipc_event(IPCEvent.TASK_CREATED, task.id)
+        asyncio.run(app._handle_ipc_event(IPCEvent.TASK_CREATED, task.id))
         end_time = time.perf_counter()
 
         latency_ms = (end_time - start_time) * 1000
@@ -639,6 +647,8 @@ class TestMonitorApp:
 
     def test_handle_ipc_event_handles_rapid_fire_commands(self, temp_db):
         """Test _handle_ipc_event handles rapid-fire CLI commands correctly."""
+        import asyncio
+
         from jot.db.repository import TaskRepository
         from jot.ipc.events import IPCEvent
 
@@ -668,9 +678,9 @@ class TestMonitorApp:
         app._task_widget = widgets[0] if widgets else None
         app._active_task = None
 
-        # Act: Simulate rapid-fire events (10 commands in quick succession)
+        # Act: Simulate rapid-fire events (10 commands in quick succession) (now async)
         for task in tasks:
-            app._handle_ipc_event(IPCEvent.TASK_CREATED, task.id)
+            asyncio.run(app._handle_ipc_event(IPCEvent.TASK_CREATED, task.id))
 
         # Assert: Should show last active task
         assert app._active_task is not None
@@ -714,6 +724,7 @@ class TestMonitorApp:
 
     def test_monitor_handles_ipc_callback_errors_gracefully(self, temp_db):
         """Test monitor handles IPC callback errors without crashing."""
+        import asyncio
         from unittest.mock import MagicMock, patch
 
         from jot.db.repository import TaskRepository
@@ -743,8 +754,8 @@ class TestMonitorApp:
             mock_repo_class.return_value = mock_repo
             mock_repo.get_active_task.side_effect = Exception("Database error")
 
-            # Act: Simulate IPC event (should handle error gracefully)
-            app._handle_ipc_event(IPCEvent.TASK_CREATED, task.id)
+            # Act: Simulate IPC event (should handle error gracefully) (now async)
+            asyncio.run(app._handle_ipc_event(IPCEvent.TASK_CREATED, task.id))
 
         # Assert: Monitor should still function (no crash)
         # Display should remain unchanged (graceful degradation)

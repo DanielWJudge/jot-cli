@@ -5,6 +5,7 @@ CLI command → IPC client → IPC server → MonitorApp callback → Display up
 """
 
 import asyncio
+import contextlib
 import socket
 import uuid
 from datetime import UTC, datetime
@@ -21,6 +22,10 @@ from jot.monitor.app import MonitorApp
 
 # Check if Unix domain sockets are available
 _HAS_AF_UNIX = hasattr(socket, "AF_UNIX")
+
+# IPC propagation delay - time to wait for IPC message to propagate and be processed
+# Set to 200ms (2x the 100ms AC requirement) to ensure reliable test execution
+IPC_PROPAGATION_DELAY_S = 0.2
 
 
 @pytest.mark.skipif(not _HAS_AF_UNIX, reason="Unix domain sockets not available on this platform")
@@ -62,7 +67,7 @@ class TestRealTimeMonitorUpdatesE2E:
                 notify_monitor(IPCEvent.TASK_CREATED, task.id)
 
                 # Give IPC server time to process message
-                await asyncio.sleep(0.2)
+                await asyncio.sleep(IPC_PROPAGATION_DELAY_S)
 
                 # Assert: Monitor should have updated display
                 assert app._active_task is not None
@@ -316,3 +321,54 @@ class TestRealTimeMonitorUpdatesE2E:
 
             finally:
                 await app.on_unmount()
+
+
+@pytest.mark.skipif(not _HAS_AF_UNIX, reason="Unix domain sockets not available on this platform")
+@pytest.mark.asyncio
+async def test_monitor_handles_socket_removed_during_runtime(temp_db, tmp_path: Path) -> None:
+    """Test that monitor handles socket file removed during runtime (AC 4)."""
+    # Arrange: Create task and set up monitor
+    repo = TaskRepository()
+    task = Task(
+        id=str(uuid.uuid4()),
+        description="Test runtime socket removal",
+        state=TaskState.ACTIVE,
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
+    )
+    repo.create_task(task)
+
+    with (
+        patch("jot.monitor.app.get_runtime_dir", return_value=tmp_path),
+        patch("jot.ipc.client.get_runtime_dir", return_value=tmp_path),
+    ):
+        app = MonitorApp()
+        widgets = list(app.compose())
+        app._task_widget = widgets[0] if widgets else None
+
+        await app.on_mount()
+
+        try:
+            # Verify IPC server started and socket exists
+            socket_path = tmp_path / "monitor.sock"
+            assert socket_path.exists()
+
+            # Act: Remove socket file while monitor is running
+            socket_path.unlink()
+
+            # Monitor should continue functioning even with socket removed
+            # Display should still work
+            assert app._active_task is not None
+            assert app._active_task.description == "Test runtime socket removal"
+
+            # Try to send IPC message - should fail gracefully (no crash)
+            with contextlib.suppress(Exception):
+                notify_monitor(IPCEvent.TASK_COMPLETED, task.id)
+                # Expected to fail - socket is gone
+
+            # Monitor should still be functional
+            widget_content = str(app._task_widget.content)
+            assert "Test runtime socket removal" in widget_content
+
+        finally:
+            await app.on_unmount()
