@@ -37,7 +37,7 @@ class TestRealTimeMonitorUpdatesE2E:
         """Test that CLI 'add' command triggers monitor display update via IPC."""
         # Arrange: Set up monitor app with IPC server
         with (
-            patch("jot.monitor.app.get_runtime_dir", return_value=tmp_path),
+            patch("jot.ipc.server.get_runtime_dir", return_value=tmp_path),
             patch("jot.ipc.client.get_runtime_dir", return_value=tmp_path),
         ):
             app = MonitorApp()
@@ -93,7 +93,7 @@ class TestRealTimeMonitorUpdatesE2E:
         repo.create_task(task)
 
         with (
-            patch("jot.monitor.app.get_runtime_dir", return_value=tmp_path),
+            patch("jot.ipc.server.get_runtime_dir", return_value=tmp_path),
             patch("jot.ipc.client.get_runtime_dir", return_value=tmp_path),
         ):
             app = MonitorApp()
@@ -143,7 +143,7 @@ class TestRealTimeMonitorUpdatesE2E:
         repo.create_task(task)
 
         with (
-            patch("jot.monitor.app.get_runtime_dir", return_value=tmp_path),
+            patch("jot.ipc.server.get_runtime_dir", return_value=tmp_path),
             patch("jot.ipc.client.get_runtime_dir", return_value=tmp_path),
         ):
             app = MonitorApp()
@@ -187,7 +187,7 @@ class TestRealTimeMonitorUpdatesE2E:
         repo.create_task(task)
 
         with (
-            patch("jot.monitor.app.get_runtime_dir", return_value=tmp_path),
+            patch("jot.ipc.server.get_runtime_dir", return_value=tmp_path),
             patch("jot.ipc.client.get_runtime_dir", return_value=tmp_path),
         ):
             app = MonitorApp()
@@ -225,7 +225,7 @@ class TestRealTimeMonitorUpdatesE2E:
         repo = TaskRepository()
 
         with (
-            patch("jot.monitor.app.get_runtime_dir", return_value=tmp_path),
+            patch("jot.ipc.server.get_runtime_dir", return_value=tmp_path),
             patch("jot.ipc.client.get_runtime_dir", return_value=tmp_path),
         ):
             app = MonitorApp()
@@ -291,7 +291,7 @@ class TestRealTimeMonitorUpdatesE2E:
         repo.create_task(task)
 
         with (
-            patch("jot.monitor.app.get_runtime_dir", return_value=tmp_path),
+            patch("jot.ipc.server.get_runtime_dir", return_value=tmp_path),
             patch("jot.ipc.client.get_runtime_dir", return_value=tmp_path),
         ):
             app = MonitorApp()
@@ -339,7 +339,7 @@ async def test_monitor_handles_socket_removed_during_runtime(temp_db, tmp_path: 
     repo.create_task(task)
 
     with (
-        patch("jot.monitor.app.get_runtime_dir", return_value=tmp_path),
+        patch("jot.ipc.server.get_runtime_dir", return_value=tmp_path),
         patch("jot.ipc.client.get_runtime_dir", return_value=tmp_path),
     ):
         app = MonitorApp()
