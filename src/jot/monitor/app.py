@@ -80,15 +80,30 @@ class MonitorApp(App):  # type: ignore[misc]
         signal.signal(signal.SIGINT, handle_sigint)
 
     def _handle_ipc_event(self, event: IPCEvent, task_id: str) -> None:
-        """Handle IPC events from CLI commands (placeholder for Story 3.6).
+        """Handle IPC events from CLI commands for real-time updates.
+
+        When an IPC event is received, this method queries the database
+        fresh (source of truth) and updates the display accordingly.
 
         Args:
-            event: The IPC event type
+            event: The IPC event type (TASK_CREATED, TASK_COMPLETED, etc.)
             task_id: The task ID associated with the event
         """
-        # Placeholder for Story 3.6 - real-time updates
-        # For now, just log that we received an event
         logger.info(f"Received IPC event: {event} for task {task_id}")
+
+        try:
+            # Query database fresh on event receipt (source of truth)
+            # This ensures we never display stale data
+            repo = TaskRepository()
+            self._active_task = repo.get_active_task()
+
+            # Update display with fresh data
+            self._update_display()
+
+        except Exception as e:
+            # Log error but continue functioning (graceful degradation)
+            logger.error(f"Error handling IPC event {event} for task {task_id}: {e}", exc_info=True)
+            # Keep current display - don't crash monitor
 
     def _update_display(self) -> None:
         """Update the display based on current active task."""
